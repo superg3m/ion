@@ -1,7 +1,7 @@
 -- Jovanni's Vision -- 
 
 
-// Basic Program
+// Basic Program (subject to change!)
 enum TypeID {
     INVALID = -1;
 
@@ -11,6 +11,9 @@ enum TypeID {
 
 type_group TypeIDMask = u32|f32
 
+// Maybe it shoulnd't be a runtime type check maybe it should be like a codegen thing
+// @switch($T)
+// @ is like a codegen symbol
 func get_type_value(value: $T/TypeIDMask) -> TypeID, $T {
     switch ($T) {
         case == int {
