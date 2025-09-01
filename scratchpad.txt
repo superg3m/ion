@@ -1,0 +1,36 @@
+-- Jovanni's Vision -- 
+
+
+// Basic Program
+enum TypeID {
+    INVALID = -1;
+
+    INTEGER = 5;
+    FLOAT;      // 6
+}
+
+type_group TypeIDMask = u32|f32
+
+func get_type_value(value: $T/TypeIDMask) -> TypeID, $T {
+    switch ($T) {
+        case == int {
+            return INTEGER, value;
+        } break;
+
+        case == float {
+            return FLOAT, value;
+        }
+    }
+
+    return INVALID, value;
+}
+
+
+func main() -> s32 {
+    var typeid, _ := get_type_value(5);
+    var typeid2, value := get_type_value(6.5);
+
+
+    return 0;
+}
+----------------------
