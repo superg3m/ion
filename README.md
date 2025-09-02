@@ -81,8 +81,8 @@ ARK pointed out that lhs doens't work with arr[]. longer chains
 ### EXPRESSIONS (Operator Precedence)
 // └── Logical (||, &&)
 //      └── Comparison (==, !=, <, >, etc.)
-//          └── Additive (+, -, |, ^)
-//              └── Multiplicative (*, /, %, <<, >>)
+//          └── Additive (+, -, &, |, ^) (BinaryOp)
+//              └── Multiplicative (*, /, %, <<, >>) (BinaryOp)
 //                  └── Unary (+, -, !, ~, &, *)
 //                      └── Primary (literals, identifiers, etc.) 
 <expression> ::= <logical>
