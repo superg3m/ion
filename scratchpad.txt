@@ -1,6 +1,8 @@
+- NOTES -
+    1. Make sure Vector has a macro 
+    Vector(int) data; instad of int* data;
+
 -- Jovanni's Vision -- 
-
-
 // Basic Program (subject to change!)
 enum TypeID {
     INVALID = -1;
@@ -16,13 +18,19 @@ type_group TypeIDMask = u32|f32
 // @ is like a codegen symbol
 func get_type_value(value: $T/TypeIDMask) -> TypeID, $T {
     switch ($T) {
-        case == int {
+        case == u32 {
             return INTEGER, value;
         } break;
 
-        case == float {
+        case == f32 {
             return FLOAT, value;
         }
+
+        /* NOT ALLOWED BECAUSE OF TypeIDMask
+        case == string {
+            return FLOAT, value;
+        }
+        */
     }
 
     return INVALID, value;
