@@ -20,8 +20,8 @@ BNF Key
 --------------------------------------------------
 
 ### HIGH-LEVEL STRUCTURE
-<program> ::= (<function_decl> | <struct_decl> |  <enum_decl>  <variable_decl> | <statement>)*
-<scope> ::= "{" (<declaration> | <statement>)* "}"
+<program> ::= (<function_decl> | <struct_decl> |  <enum_decl> | <variable_decl> | <statement>)*
+<scope> ::= "{" (<variable_decl> | <statement>)* "}"
 
 ### DECLARATIONS
 <variable_decl> ::= "var" <identifier> ":" ((<type>)? ("=" <expression>)) | ((<type>) ("=" <expression>)?) ";"
@@ -41,24 +41,35 @@ BNF Key
 <struct_decl> ::= "struct" <identifier> "{" (<struct_member>)* "}"
 <struct_member> ::= <identifier> ":" <type> ";"
 
-<enum_decl> ::= "enum" <identifier> "{" <enum_variant>? (";" <enum_variant>)* "}"
+<enum_decl> ::= "enum" <identifier> ":" <type> "{" <enum_variant>? ("," <enum_variant>)* "}"
 <enum_variant> ::= <identifier> ("=" <expression>)?
+enum TokenType : u32 {
+    INTEGER = 0,
+    FLOAT
+}
 
 
 ### TYPES
 <type> ::= <primitive_type> | <struct_type> | <enum_type>
-<primitive_type> ::= "s8" | "s16" | "s32" | "s64" | "u8" | "u16" | "u32" | "u64" | "f32" | "f64" | "bool" | "string"
+<primitive_type> ::= "s8" | "s16" | "s32" | "s64" | "u8" | "u16" | "u32" | "u64" | "f32" | "f64" | "b8" | "b16" | "b32"  | "string"
 <struct_type> ::= <identifier>
 <enum_type> ::= <identifier>
 
 
 ### STATEMENTS
-<statement> ::= <assignment> | <return_stmt> | <if_stmt> | <while_stmt> | <expr_stmt> |
+<statement> ::= <assignment> | <return_stmt> | <if_stmt> | <while_stmt> | <expr_stmt>
+
+/*
+TODO:
+ARK pointed out that lhs doens't work with arr[]. longer chains
+*/
 
 <assignment> ::= <lhs> "=" <expression> ";"
 <lhs> ::= <identifier> | <member_access> | <array_access>
-<member_access> ::= <primary> "." <identifier>
-<array_access> ::= <primary> "[" <expression> "]"
+// test = 4
+
+<member_access> ::= <identifier> "." <identifier>
+<array_access> ::= <identifier> "[" <expression> "]"
 
 <return_stmt> ::= "return" <return_value>? ";"
 <return_value> ::= <expression> | "(" <expression> ("," <expression>)* ")"
