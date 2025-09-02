@@ -25,16 +25,18 @@ BNF Key
 
 ### DECLARATIONS
 <variable_decl> ::= "var" <identifier> ":" ((<type>)? ("=" <expression>)) | ((<type>) ("=" <expression>)?) ";"
+    // var test: int;
+    // var test := 5;
+    // var test: int = 5;
 
 <function_decl> ::= "func" <identifier> "(" <param_list>? ")" "->" <return_type> <scope>
 <param_list> ::= <parameter> ("," <parameter>)*
 <parameter> ::= <identifier> ":" <type>
 <return_type> ::= <type> | "(" <type_list> ")" | "void"
 <type_list> ::= <type> ("," <type>)*
-
-// var test: int;
-// var test := 5;
-// var test: int = 5;
+/*
+    func get_value(a: int, b: int) -> void {}
+*/
 
 <struct_decl> ::= "struct" <identifier> "{" (<struct_member>)* "}"
 <struct_member> ::= <identifier> ":" <type> ";"
