@@ -6,11 +6,12 @@
 #include "../Memory/memory.hpp"
 #include "../Common/common.hpp"
 
+namespace ION {
+    template <typename T>
+    struct View {
+        const T* const data;
+        u64 length;
 
-template <typename T>
-struct View {
-    const T* const data;
-    u64 length;
-
-    View(const T* const data, u64 length): data(data), length(length) {}
-};
+        View(const T* const data, u64 length): data(data), length(length) {}
+    };
+}
