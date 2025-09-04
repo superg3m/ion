@@ -5,7 +5,7 @@
 typedef struct Lexer {
     u64 left_pos;
     u64 right_pos;
-    SPL_Token* tokens;
+    CKG_Vector(ION_Token) tokens;
     int line;
 
     CKG_StringView source;
@@ -13,4 +13,4 @@ typedef struct Lexer {
 } Lexer;
 
 Lexer lexer_create();
-SPL_Token* lexer_consume_token_stream(Lexer* lexer, char* source, u64 source_length);
+CKG_Vector(ION_Token) lexer_consume_token_stream(Lexer* lexer, char* source, u64 source_length);

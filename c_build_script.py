@@ -47,6 +47,10 @@ if IS_WINDOWS():
     windows_libs = [GET_LIB_FLAG(cc, "User32"), GET_LIB_FLAG(cc, "Gdi32")]
     executable_procedure_libs += windows_libs
 
+compile_time_defines = []
+if C_BUILD_BUILD_TYPE() == "debug":
+    compiler_flags.append("ION_CC_DEBUG")
+
 build_postfix = f"build_{cc.compiler_name}/{C_BUILD_BUILD_TYPE()}"
 procedures: Dict[str, ProcedureConfig] = {
     "project_exe": ProcedureConfig(
@@ -59,6 +63,7 @@ procedures: Dict[str, ProcedureConfig] = {
         include_paths=[
             "../../Include"
         ],
+        compile_time_defines = compile_time_defines,
         additional_libs=executable_procedure_libs
     )
 }

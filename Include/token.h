@@ -136,9 +136,9 @@ typedef struct ION_Token {
     int line;
 } ION_Token;
 
-ION_Token ION_token_from_string(CKG_StringView sv, int line);
+ION_Token ion_token_from_string(CKG_StringView sv, int line);
 
-#define ION_TOKEN_CREATE(value, line) ION_token_from_string(value, line)
+#define ION_TOKEN_CREATE(value, line) ion_token_from_string(value, line)
 #define ION_TOKEN_CREATE_CUSTOM(token_type, name, line) (ION_Token){(token_type), (name), 0, (line)}
 
 void token_print(ION_Token token, char* indent);

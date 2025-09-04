@@ -71,15 +71,23 @@
     #include <stdlib.h>
     #include <stddef.h>
 
-    typedef int8_t  s8;
-    typedef int16_t s16;
-    typedef int16_t s32;
-    typedef int64_t s64;
+    typedef int8_t  b8;
+    typedef int16_t b16;
+    typedef int16_t b32;
+    typedef int64_t b64;
+
+    typedef int8_t  i8;
+    typedef int16_t i16;
+    typedef int16_t i32;
+    typedef int64_t i64;
 
     typedef uint8_t  u8;
     typedef uint16_t u16;
     typedef uint16_t u32;
     typedef uint64_t u64;
+
+    typedef float  f32;
+    typedef double f64;
 
     #define NULLPTR 0
     #define PI 3.14159265359
@@ -199,6 +207,14 @@
         #define ckg_assert(expression)
         #define ckg_assert_msg(expression, message, ...)
     #endif
+
+    #if defined(ION_CC_DEBUG)
+        #define ckg_dassert(expression) MACRO_ckg_assert((expression), __func__, __FILE__, __LINE__)
+        #define ckg_dassert_msg(expression, message, ...) MACRO_ckg_assert_msg((expression), __func__, __FILE__, __LINE__, message, ##__VA_ARGS__)
+    #else
+        #define ckg_dassert(expression)
+        #define ckg_dassert_msg(expression, message, ...)
+    #endif
 #endif
 
 #if defined(CKG_INCLUDE_ERRORS)
@@ -302,6 +318,8 @@
         int capacity;
         size_t element_size;
     } CKG_VectorHeader;
+
+    #define CKG_Vector(TYPE) TYPE*
 
     CKG_API void* ckg_vector_grow(void* vector, size_t element_size, int capacity);
     CKG_API void* MACRO_ckg_vector_free(void* vector);
