@@ -20,9 +20,9 @@ static b32 ion_ast_nk_is_list(ION_AstNodeKind nk) { return !ion_ast_nk_is_leaf(n
 typedef struct ION_AstNode {
     ION_AstNodeKind kind;
     
-    CKG_StringView source_view; // make type with line
+    CKG_StringView source_view; // @TODO save line_number as well
     union {
-        // list nodes have to store how many descendant nodes they contain (includes the header list node itself)
+        // list nodes have to store how many descendant nodes they contain (excluding the list node itself)
         struct { u32 descendant_count; };
         
         i64 as_i64;
@@ -42,29 +42,21 @@ typedef struct ION_Ast {
     u32 node_cap;
 } ION_Ast;
  
-typedef struct { u32 index; } ION_AstNodeIndex;
+typedef struct { u32 index; } ION_AstNodeH;
 
-
-
-static ION_AstNodeIndex ion_ast_push(ION_Ast* ast, ION_AstNode node)
+static ION_AstNodeH ion_ast_push(ION_Ast* ast, ION_AstNode node)
 {
-    ION_AstNodeIndex i = { ast->node_len };
-    ckg_assert_msg(i.index < ast->node_cap, "ast boom");
-    ast->node_arr[i.index++] = node;
-    return i;
+    ION_AstNodeH h = { ast->node_len };
+    ckg_assert_msg(h.index < ast->node_cap, "ast boom");
+    ast->node_arr[h.index++] = node;
+    return h;
 }
 
-static ION_AstNode* ion_ast_get(ION_Ast* ast, ION_AstNodeIndex i)
+static ION_AstNode* ion_ast_get(ION_Ast* ast, ION_AstNodeH nodeH)
 {
-    ION_AstNode* node = &ast->node_arr[i.index];
-
-#if ION_CC_DEBUG
-    node.debug_str = ion_ast_node_to_str(ast, node);
-#endif
-
+    ION_AstNode* node = &ast->node_arr[nodeH.index];
     return node;
 }
-
 
 
 // Expression
