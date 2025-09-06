@@ -77,7 +77,7 @@ static void lexer_add_token(Lexer* lexer, IonTokenType token_type) {
         token_type == ION_TOKEN_CHARACTER_LITERAL || token_type == ION_TOKEN_STRING_LITERAL || 
         token_type == ION_TOKEN_INTEGER_LITERAL || token_type == ION_TOKEN_FLOAT_LITERAL
     ) {
-        ckg_vector_push(lexer->tokens, ion_token_from_string(name, lexer->line));
+        ckg_vector_push(lexer->tokens, ion_token_from_string(token_type, name, lexer->line));
     } else {
         ckg_vector_push(lexer->tokens, ((IonToken){token_type, name, lexer->line, {0}}));
     }
@@ -272,6 +272,8 @@ CKG_Vector(IonToken) lexer_consume_token_stream(Lexer* lexer, u8* source, u64 so
         lexer_consume_next_token(lexer);
     }
 
+
+    // can probably just get rid of this?
     ckg_vector_push(lexer->tokens, ((IonToken){ION_TOKEN_EOF, CKG_SV_NULL(), lexer->line, {0}}));
 
     return lexer->tokens;

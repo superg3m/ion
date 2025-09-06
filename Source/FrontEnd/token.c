@@ -4,26 +4,22 @@ void token_print(IonToken token, char* indent) {
     CKG_LOG_PRINT("%s%s(%.*s) | line: %d\n", indent, token_strings[token.type], (int)token.name.length, token.name.data, token.line);
 }
 
-IonToken ion_token_from_string(CKG_StringView sv, int line) {
-    IonToken token = { .line = line, .name = sv };
+IonToken ion_token_from_string(IonTokenType token_type, CKG_StringView sv, int line) {
+    IonToken token = { .type = token_type, .name = sv, .line = line };
     
-    if (token.name.data[0] == '"') {
-        token.type = ION_TOKEN_STRING_LITERAL;
+    if (token.type == ION_TOKEN_STRING_LITERAL) {
         return token;
-    } else if (token.name.data[0] == '\'') {
-        token.type = ION_TOKEN_CHARACTER_LITERAL;
+    } else if (token.type == ION_TOKEN_CHARACTER_LITERAL) {
         token.c = token.name.data[1];
 
         return token;
     }
 
-    if (ckg_str_equal(sv.data, sv.length, CKG_LIT_ARG("true"))) {
-        token.type = ION_TOKEN_TRUE;
+    if (token.type == ION_TOKEN_TRUE) {
         token.b = true;
 
         return token;
-    } else if (ckg_str_equal(sv.data, sv.length, CKG_LIT_ARG("false"))) {
-        token.type = ION_TOKEN_FALSE;
+    } else if (token.type == ION_TOKEN_FALSE) {
         token.b = false;
 
         return token;
