@@ -4,8 +4,6 @@
 
 int main(int argc, char** argv) {
 	// Lexer -> Parser -> AST -> Interpret (AST Walk)
-	CKG_LOG_PRINT("HELLO WORLD!\n");
-
 	CKG_Error err = CKG_ERROR_SUCCESS;
 	size_t file_size = 0;
 	u8* data = ckg_io_read_entire_file("../../ion_source/test.ion", &file_size, &err);

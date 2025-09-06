@@ -16,6 +16,7 @@ typedef enum IonTokenType {
     ION_TOKEN_PLUS,                       // "+"
     ION_TOKEN_COMMA,                      // ","
     ION_TOKEN_MINUS,                      // "-"
+    ION_TOKEN_RIGHT_ARROW,                // "->"
     ION_TOKEN_DOT,                        // "."
     ION_TOKEN_DIVISION,                   // "/"
     ION_TOKEN_SEMI_COLON,                 // ";"
@@ -42,12 +43,14 @@ typedef enum IonTokenType {
     ION_TOKEN_BITWISE_RIGHT_SHIFT,        // ">>"
     ION_TOKEN_BITWISE_LEFT_SHIFT_EQUALS,  // "<<="
     ION_TOKEN_BITWISE_RIGHT_SHIFT_EQUALS, // ">>="
+    ION_TOKEN_COLON_EQUALS,               // ":="
     ION_TOKEN_UNINITIALIZED,              // "---"
     ION_TOKEN_DYNAMIC_ARRAY,              // "[..]"
     ION_TOKEN_AND,                        // "&&"
     ION_TOKEN_OR,                         // "||"
     ION_TOKEN_COMMENT,                    // "//"
     ION_TOKEN_IDENTIFIER,                 // any_word
+    ION_TOKEN_UNDERSCORE_IDENTIFIER,       // _
     ION_TOKEN_STRING_LITERAL,             // "TESTING"
     ION_TOKEN_INTEGER_LITERAL,            // 6
     ION_TOKEN_FLOAT_LITERAL,              // 2.523
@@ -60,6 +63,9 @@ typedef enum IonTokenType {
     ION_TOKEN_FALSE,                      // false
     ION_TOKEN_NULL,                       // null
     ION_TOKEN_RETURN,                     // return
+    ION_TOKEN_VAR,                        // var
+    ION_TOKEN_FUNC,                       // func
+    ION_TOKEN_PRIMITIVE_TYPE,             // any primitive type
     ION_TOKEN_COUNT
 } IonTokenType;
 
@@ -78,6 +84,7 @@ static char* token_strings[ION_TOKEN_COUNT] = {
     stringify(ION_TOKEN_PLUS),
     stringify(ION_TOKEN_COMMA),
     stringify(ION_TOKEN_MINUS),
+    stringify(ION_TOKEN_RIGHT_ARROW),
     stringify(ION_TOKEN_DOT),
     stringify(ION_TOKEN_DIVISION),
     stringify(ION_TOKEN_SEMI_COLON),
@@ -104,12 +111,14 @@ static char* token_strings[ION_TOKEN_COUNT] = {
     stringify(ION_TOKEN_BITWISE_RIGHT_SHIFT),
     stringify(ION_TOKEN_BITWISE_LEFT_SHIFT_EQUALS),
     stringify(ION_TOKEN_BITWISE_RIGHT_SHIFT_EQUALS),
+    stringify(ION_TOKEN_COLON_EQUALS),
     stringify(ION_TOKEN_UNINITIALIZED),
     stringify(ION_TOKEN_DYNAMIC_ARRAY),
     stringify(ION_TOKEN_AND),
     stringify(ION_TOKEN_OR),
     stringify(ION_TOKEN_COMMENT),
     stringify(ION_TOKEN_IDENTIFIER),
+    stringify(ION_TOKEN_UNDERSCORE_IDENTIFIER),
     stringify(ION_TOKEN_STRING_LITERAL),
     stringify(ION_TOKEN_INTEGER_LITERAL),
     stringify(ION_TOKEN_FLOAT_LITERAL),
@@ -121,7 +130,10 @@ static char* token_strings[ION_TOKEN_COUNT] = {
     stringify(ION_TOKEN_TRUE),
     stringify(ION_TOKEN_FALSE),
     stringify(ION_TOKEN_NULL),
-    stringify(ION_TOKEN_RETURN)
+    stringify(ION_TOKEN_RETURN),
+    stringify(ION_TOKEN_VAR),
+    stringify(ION_TOKEN_FUNC),
+    stringify(ION_TOKEN_PRIMITIVE_TYPE),
 };
 
 typedef struct IonToken {
@@ -140,4 +152,5 @@ IonToken ion_token_from_string(IonTokenType token_type, CKG_StringView sv, int l
 
 void token_print(IonToken token, char* indent);
 IonTokenType token_get_keyword(const char* str, u64 str_length);
+IonTokenType token_get_type_primitive(const char* str, u64 str_length);
 IonTokenType token_get_syntax(const char* str, u64 str_length);

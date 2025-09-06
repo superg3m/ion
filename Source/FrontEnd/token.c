@@ -73,6 +73,26 @@ IonTokenType token_get_keyword(const char* str, u64 str_length) {
         return ION_TOKEN_NULL;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("return"))) {
         return ION_TOKEN_RETURN;
+    } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("var"))) {
+        return ION_TOKEN_VAR;
+    } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("func"))) {
+        return ION_TOKEN_FUNC;
+    }
+
+    return ION_TOKEN_ILLEGAL_TOKEN;
+}
+
+IonTokenType token_get_type_primitive(const char* str, u64 str_length) {
+   bool signed_primitives = 
+   ckg_str_equal(str, str_length, CKG_LIT_ARG("i8")) || ckg_str_equal(str, str_length, CKG_LIT_ARG("i16")) ||
+   ckg_str_equal(str, str_length, CKG_LIT_ARG("i32")) || ckg_str_equal(str, str_length, CKG_LIT_ARG("i64"));
+
+   bool unsigned_primitives = 
+   ckg_str_equal(str, str_length, CKG_LIT_ARG("u8")) || ckg_str_equal(str, str_length, CKG_LIT_ARG("u16")) ||
+   ckg_str_equal(str, str_length, CKG_LIT_ARG("u32")) || ckg_str_equal(str, str_length, CKG_LIT_ARG("u4"));
+
+    if (signed_primitives || unsigned_primitives) {
+        return ION_TOKEN_PRIMITIVE_TYPE;
     }
 
     return ION_TOKEN_ILLEGAL_TOKEN;
@@ -85,12 +105,16 @@ IonTokenType token_get_syntax(const char* str, u64 str_length) {
         return ION_TOKEN_ASSIGNMENT;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("%"))) {
         return ION_TOKEN_MODULUS;
+    } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG(":"))) {
+        return ION_TOKEN_COLON;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("~"))) {
         return ION_TOKEN_BITWISE_NOT;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("+"))) {
         return ION_TOKEN_PLUS;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("-"))) {
         return ION_TOKEN_MINUS;
+    } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("->"))) {
+        return ION_TOKEN_RIGHT_ARROW;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("/"))) {
         return ION_TOKEN_DIVISION;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("*"))) {
@@ -153,6 +177,8 @@ IonTokenType token_get_syntax(const char* str, u64 str_length) {
         return ION_TOKEN_BITWISE_LEFT_SHIFT_EQUALS;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG(">>="))) {
         return ION_TOKEN_BITWISE_RIGHT_SHIFT_EQUALS;
+    } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG(":="))) {
+        return ION_TOKEN_COLON_EQUALS;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("---"))) {
         return ION_TOKEN_UNINITIALIZED;
     } else if (ckg_str_equal(str, str_length, CKG_LIT_ARG("[..]"))) {

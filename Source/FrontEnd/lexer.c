@@ -146,7 +146,7 @@ static bool lexer_consume_literal(Lexer* lexer) {
 
 
 static bool lexer_try_consume_word(Lexer* lexer) {
-    if (!ckg_char_is_alpha(lexer->c)) {
+    if (!ckg_char_is_alpha(lexer->c) && lexer->c != '_') {
         return false;
     }
 
@@ -174,7 +174,18 @@ static bool lexer_consume_word(Lexer* lexer) {
         return true;
     }
 
-    lexer_add_token(lexer, ION_TOKEN_IDENTIFIER);
+    token_type = token_get_type_primitive(scratch.data, scratch.length);
+    if (token_type != ION_TOKEN_ILLEGAL_TOKEN) {
+        lexer_add_token(lexer, token_type);
+        return true;
+    }
+
+    if (ckg_str_equal(scratch.data, scratch.length, CKG_LIT_ARG("_"))) {
+        lexer_add_token(lexer, ION_TOKEN_UNDERSCORE_IDENTIFIER);
+    } else {
+        lexer_add_token(lexer, ION_TOKEN_IDENTIFIER);
+    }
+
     return true;
 }
 
@@ -218,21 +229,18 @@ static bool lexer_consume_syntax(Lexer* lexer) {
         lexer_consume_on_match(lexer, '>');
         lexer_consume_on_match(lexer, '=');
     } else if (lexer->c == '-') {
-        if (!lexer_consume_on_match(lexer, '-')) {
-            lexer_consume_on_match(lexer, '=');
-        }
+        if (lexer_consume_on_match(lexer, '>')) {} 
+        else if (lexer_consume_on_match(lexer, '-')) {}
+        else if (lexer_consume_on_match(lexer, '=')) {}
     } else if (lexer->c == '+') {
-        if (!lexer_consume_on_match(lexer, '+')) {
-            lexer_consume_on_match(lexer, '=');
-        }
+        if (lexer_consume_on_match(lexer, '+')) {}
+        else if (lexer_consume_on_match(lexer, '=')) {}
     } else if (lexer->c == '|') {
-        if (!lexer_consume_on_match(lexer, '|')) {
-            lexer_consume_on_match(lexer, '=');
-        }
+        if (lexer_consume_on_match(lexer, '|')) {}
+        else if (lexer_consume_on_match(lexer, '=')) {}
     } else if (lexer->c == '&') {
-        if (!lexer_consume_on_match(lexer, '&')) {
-            lexer_consume_on_match(lexer, '=');
-        }
+        if (lexer_consume_on_match(lexer, '&')) {}
+        else if (lexer_consume_on_match(lexer, '=')) {}
     } else if (lexer->c == '!' || lexer->c == '^' || lexer->c == '*' || lexer->c == '=') {
         lexer_consume_on_match(lexer, '=');
     }

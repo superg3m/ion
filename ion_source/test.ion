@@ -1,1 +1,9 @@
-(4 + 2)
+func main() -> i32 {
+    var typeid, _ := get_type_value(5);
+    var typeid2, value := get_type_value(6.5);
+
+    var x: i32 = 5 + 3;
+
+
+    return 0;
+}
