@@ -49,7 +49,7 @@ if IS_WINDOWS():
 
 compile_time_defines = []
 if C_BUILD_BUILD_TYPE() == "debug":
-    compiler_flags.append("ION_CC_DEBUG")
+    compile_time_defines.append("ION_CC_DEBUG")
 
 build_postfix = f"build_{cc.compiler_name}/{C_BUILD_BUILD_TYPE()}"
 procedures: Dict[str, ProcedureConfig] = {
@@ -57,8 +57,7 @@ procedures: Dict[str, ProcedureConfig] = {
         build_directory=f"./{build_postfix}",
         output_name="some_project.exe",
         source_files=[
-            "../../Source/main.c",
-            "../../Source/Core/ckg.c",
+            "../../Source/**/*.c"
         ],
         include_paths=[
             "../../Include"

@@ -1,7 +1,7 @@
 #pragma once
 #include <Core/ckg.h>
 
-typedef enum ION_TokenType {
+typedef enum IonTokenType {
     ION_TOKEN_ILLEGAL_TOKEN,
     ION_TOKEN_EOF,
     ION_TOKEN_NOT,                        // "!"
@@ -61,7 +61,7 @@ typedef enum ION_TokenType {
     ION_TOKEN_NULL,                       // null
     ION_TOKEN_RETURN,                     // return
     ION_TOKEN_COUNT
-} ION_TokenType;
+} IonTokenType;
 
 static char* token_strings[ION_TOKEN_COUNT] = {
     stringify(ION_TOKEN_ILLEGAL_TOKEN),
@@ -124,23 +124,21 @@ static char* token_strings[ION_TOKEN_COUNT] = {
     stringify(ION_TOKEN_RETURN)
 };
 
-typedef struct ION_Token {
-    ION_TokenType type;
+typedef struct IonToken {
+    IonTokenType type;
     CKG_StringView name;
+    int line;
     union {
         char c;
         int i;
         double f;
         bool b;
     };
-    int line;
-} ION_Token;
+} IonToken;
 
-ION_Token ion_token_from_string(CKG_StringView sv, int line);
+IonToken ion_token_from_string(CKG_StringView sv, int line);
 
-#define ION_TOKEN_CREATE(value, line) ion_token_from_string(value, line)
-#define ION_TOKEN_CREATE_CUSTOM(token_type, name, line) (ION_Token){(token_type), (name), 0, (line)}
 
-void token_print(ION_Token token, char* indent);
-ION_TokenType token_get_keyword(const char* str, u64 str_length);
-ION_TokenType token_get_syntax(const char* str, u64 str_length);
+void token_print(IonToken token, char* indent);
+IonTokenType token_get_keyword(const char* str, u64 str_length);
+IonTokenType token_get_syntax(const char* str, u64 str_length);

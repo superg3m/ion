@@ -37,7 +37,7 @@ func get_type_value(value: TypeIDMask) -> TypeID, TypeIDMask {
 }
 
 
-func main() -> s32 {
+func main() -> i32 {
     var typeid, _ := get_type_value(5);
     var typeid2, value := get_type_value(6.5);
 

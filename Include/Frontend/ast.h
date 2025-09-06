@@ -1,4 +1,4 @@
-#include "Core/ckg.h"
+#include <Core/ckg.h>
 
 enum {
     ION_NK_INT_LIT,
@@ -85,7 +85,7 @@ static ION_AstNodeIndex parse_logical_expression(Parser* parser) {
     
     ION_AstNodeIndex expression = parse_comparison_expression(parser);
     while (parser_consume_on_match(parser, ION_TOKEN_OR) || parser_consume_on_match(parser, ION_TOKEN_AND)) {
-        ION_Token op = parser_previous_token(parser);
+        IonToken op = parser_previous_token(parser);
         ION_AstNodeIndex right = parse_comparison_expression(parser);
 
         expression = logical_expression_create(op, expression, right, op.line);
@@ -103,8 +103,8 @@ static ION_AstNodeIndex parse_logical_expression(Parser* parser) {
 static Expression* parse_expression(Parser* parser);
 // <primary> ::= INTEGER | FLOAT | TRUE | FALSE | STRING | PRIMITIVE_TYPE | IDENTIFIER | "(" <expression> ")"
 static Expression* parse_primary_expression(Parser* parser) {
-    if (parser_consume_on_match(parser, SPL_TOKEN_INTEGER_LITERAL)) {
-        SPL_Token tok = parser_previous_token(parser);
+    if (parser_consume_on_match(parser, ION_TOKEN_INTEGER_LITERAL)) {
+        IonToken tok = parser_previous_token(parser);
         push_ast()
         return integer_expression_create(parser->tok.i, tok.line);
     }
@@ -152,7 +152,7 @@ static ION_AstNodeIndex parse_binary_expression(Parser* parser) {
 
     Expression* expression = parse_primary_expression(parser);
     while (parser_consume_on_match(parser, ION_TOKEN_PLUS)) {
-        ION_Token op = parser_previous_token(parser);
+        IonToken op = parser_previous_token(parser);
         Expression* right = parse_primary_expression(parser);
 
         expression = binary_expression_create(op, expression, right, op.line);

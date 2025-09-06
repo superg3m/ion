@@ -1,4 +1,4 @@
-#include <lexer.h>
+#include <Frontend/lexer.h>
 
 Lexer lexer_create() {
     Lexer lexer = {0};
@@ -71,32 +71,26 @@ static bool lexer_consume_on_match(Lexer* lexer, char expected) {
 }
 
 
-static void lexer_add_token(Lexer* lexer, SPL_TokenType token_type) {
+static void lexer_add_token(Lexer* lexer, IonTokenType token_type) {
     CKG_StringView name = lexer_get_scratch_buffer(lexer);
-    if (token_type == SPL_TOKEN_TRUE || token_type == SPL_TOKEN_FALSE ||
-        token_type == SPL_TOKEN_CHARACTER_LITERAL || token_type == SPL_TOKEN_STRING_LITERAL || 
-        token_type == SPL_TOKEN_INTEGER_LITERAL || token_type == SPL_TOKEN_FLOAT_LITERAL
+    if (token_type == ION_TOKEN_TRUE || token_type == ION_TOKEN_FALSE ||
+        token_type == ION_TOKEN_CHARACTER_LITERAL || token_type == ION_TOKEN_STRING_LITERAL || 
+        token_type == ION_TOKEN_INTEGER_LITERAL || token_type == ION_TOKEN_FLOAT_LITERAL
     ) {
-        ckg_vector_push(lexer->tokens, SPL_TOKEN_CREATE(name, lexer->line));
+        ckg_vector_push(lexer->tokens, ion_token_from_string(name, lexer->line));
     } else {
-        ckg_vector_push(lexer->tokens, SPL_TOKEN_CREATE_CUSTOM(token_type, name, lexer->line));
+        ckg_vector_push(lexer->tokens, ((IonToken){token_type, name, lexer->line, {0}}));
     }
-
-    /*
-    else if (token_type == SPL_TOKEN_MODULUS) {
-        ckg_vector_push(lexer->tokens, SPL_TOKEN_CREATE_CUSTOM(token_type, CKG_SV_LIT("%%"), lexer->line));
-    } 
-    */
 }
 
 static void lexer_consume_digit_literal(Lexer* lexer) {
-    SPL_TokenType token_type = SPL_TOKEN_INTEGER_LITERAL;
+    IonTokenType token_type = ION_TOKEN_INTEGER_LITERAL;
 
     lexer_consume_on_match(lexer, '-');
 
     while (ckg_char_is_digit(lexer_peek_nth_char(lexer, 0)) || lexer_peek_nth_char(lexer, 0) == '.') {
         if (lexer->c == '.') {
-            token_type = SPL_TOKEN_FLOAT_LITERAL;
+            token_type = ION_TOKEN_FLOAT_LITERAL;
         }
 
         lexer_consume_next_char(lexer);
@@ -115,7 +109,7 @@ static void lexer_consume_string_literal(Lexer* lexer) {
     }
 
     lexer_consume_next_char(lexer);
-    lexer_add_token(lexer, SPL_TOKEN_STRING_LITERAL);
+    lexer_add_token(lexer, ION_TOKEN_STRING_LITERAL);
 }
 
 static void lexer_consume_character_literal(Lexer* lexer) {
@@ -132,7 +126,7 @@ static void lexer_consume_character_literal(Lexer* lexer) {
     }
 
     lexer_consume_next_char(lexer);
-    lexer_add_token(lexer, SPL_TOKEN_CHARACTER_LITERAL);
+    lexer_add_token(lexer, ION_TOKEN_CHARACTER_LITERAL);
 }
 
 static bool lexer_consume_literal(Lexer* lexer) {
@@ -174,13 +168,13 @@ static bool lexer_consume_word(Lexer* lexer) {
 
     CKG_StringView scratch = lexer_get_scratch_buffer(lexer);
 
-    SPL_TokenType token_type = token_get_keyword(scratch.data, scratch.length);
-    if (token_type != SPL_TOKEN_ILLEGAL_TOKEN) {
+    IonTokenType token_type = token_get_keyword(scratch.data, scratch.length);
+    if (token_type != ION_TOKEN_ILLEGAL_TOKEN) {
         lexer_add_token(lexer, token_type);
         return true;
     }
 
-    lexer_add_token(lexer, SPL_TOKEN_IDENTIFIER);
+    lexer_add_token(lexer, ION_TOKEN_IDENTIFIER);
     return true;
 }
 
@@ -194,7 +188,7 @@ static bool lexer_consume_syntax(Lexer* lexer) {
     if (lexer->c == '/') {
         if (lexer_consume_on_match(lexer, '/')) {
             lexer_consume_until_new_line(lexer);
-            // lexer_add_token(lexer, SPL_TOKEN_COMMENT);
+            // lexer_add_token(lexer, ION_TOKEN_COMMENT);
             return true;
         } else if (lexer_consume_on_match(lexer, '*')) {
             while (!(lexer_peek_nth_char(lexer, 0) == '*' && lexer_peek_nth_char(lexer, 1) == '/')) {
@@ -206,7 +200,7 @@ static bool lexer_consume_syntax(Lexer* lexer) {
 
             lexer_consume_next_char(lexer); // consume '*'
             lexer_consume_next_char(lexer); // consume '/'
-            // lexer_add_token(lexer, SPL_TOKEN_COMMENT);
+            // lexer_add_token(lexer, ION_TOKEN_COMMENT);
             return true;
         }
     } else if (lexer->c == '[') {
@@ -244,8 +238,8 @@ static bool lexer_consume_syntax(Lexer* lexer) {
     }
 
     CKG_StringView buffer = lexer_get_scratch_buffer(lexer);
-    SPL_TokenType token_type = token_get_syntax(buffer.data, buffer.length);
-    if (token_type != SPL_TOKEN_ILLEGAL_TOKEN) {
+    IonTokenType token_type = token_get_syntax(buffer.data, buffer.length);
+    if (token_type != ION_TOKEN_ILLEGAL_TOKEN) {
         lexer_add_token(lexer, token_type);
         return true;
     }
@@ -266,19 +260,19 @@ static void lexer_consume_next_token(Lexer* lexer) {
     }
 }
 
-SPL_Token* lexer_consume_token_stream(Lexer* lexer, char* source, u64 source_length) {
+CKG_Vector(IonToken) lexer_consume_token_stream(Lexer* lexer, u8* source, u64 source_length) {
     lexer->left_pos = 0;
     lexer->right_pos = 0;
     lexer->line = 1;
     lexer->tokens = NULL;
     lexer->c = '\0';
 
-    lexer->source = ckg_sv_create(source, source_length);
+    lexer->source = ckg_sv_create((const char*)source, source_length);
     while (!lexer_is_EOF(lexer)) {
         lexer_consume_next_token(lexer);
     }
 
-    ckg_vector_push(lexer->tokens, SPL_TOKEN_CREATE_CUSTOM(SPL_TOKEN_EOF, CKG_SV_NULL(), lexer->line));
+    ckg_vector_push(lexer->tokens, ((IonToken){ION_TOKEN_EOF, CKG_SV_NULL(), lexer->line, {0}}));
 
     return lexer->tokens;
 }

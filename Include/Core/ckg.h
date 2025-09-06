@@ -735,10 +735,10 @@
      * @param str_length 
      * @param substring 
      * @param substring_length 
-     * @return s64 
+     * @return i64 
      */
-    CKG_API s64  ckg_str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
-    CKG_API s64  ckg_str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
+    CKG_API i64  ckg_str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
+    CKG_API i64  ckg_str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
     CKG_API bool ckg_str_starts_with(const char* str, u64 str_length, const char* starts_with, u64 starts_with_length);
     CKG_API bool ckg_str_ends_with(const char* str, u64 str_length, const char* ends_with, u64 ends_with_length);
 
@@ -1066,8 +1066,8 @@
             return;
         }
 
-        s64 start_delimitor_index = ckg_str_index_of(message, message_length, LOGGER_START_DELIM, sizeof(LOGGER_START_DELIM) - 1);
-        s64 end_delimitor_index = ckg_str_index_of(message, message_length, LOGGER_END_DELIM, sizeof(LOGGER_END_DELIM) - 1);
+        i64 start_delimitor_index = ckg_str_index_of(message, message_length, LOGGER_START_DELIM, sizeof(LOGGER_START_DELIM) - 1);
+        i64 end_delimitor_index = ckg_str_index_of(message, message_length, LOGGER_END_DELIM, sizeof(LOGGER_END_DELIM) - 1);
 
         CKG_StringView left_side_view = ckg_sv_create(message, (u64)start_delimitor_index);
         CKG_StringView right_side_view = ckg_sv_create(message + ((u64)end_delimitor_index + (sizeof(LOGGER_END_DELIM) - 1)), (u64)message_length);
@@ -1455,8 +1455,8 @@
         ckg_assert(end_delimitor);
         ckg_assert(!ckg_str_equal(start_delimitor, start_delimitor_length, end_delimitor, end_delimitor_length));
 
-        s64 start_delimitor_index = ckg_str_index_of(str, str_length, start_delimitor, start_delimitor_length); 
-        s64 end_delimitor_index = ckg_str_index_of(str, str_length, end_delimitor, end_delimitor_length);
+        i64 start_delimitor_index = ckg_str_index_of(str, str_length, start_delimitor, start_delimitor_length); 
+        i64 end_delimitor_index = ckg_str_index_of(str, str_length, end_delimitor, end_delimitor_length);
         if (start_delimitor_index == -1 || end_delimitor_index == -1) {
             return CKG_SV_NULL();
         }
@@ -1491,7 +1491,7 @@
         CKG_StringView* ret_vector = NULLPTR;
         CKG_StringView str_view = ckg_sv_create(data, length);
         while (true) {
-            s64 found_index = ckg_str_index_of(str_view.data, str_view.length, delimitor, delimitor_length);
+            i64 found_index = ckg_str_index_of(str_view.data, str_view.length, delimitor, delimitor_length);
             if (found_index == -1) {
                 ckg_vector_push(ret_vector, str_view);
                 return ret_vector;
@@ -1560,14 +1560,14 @@
         ckg_assert(str);
 
         char* ret = (char*)ckg_alloc(str_length + 1);
-        for (s64 i = (s64)str_length - 1; i >= 0; i--) {
+        for (i64 i = (i64)str_length - 1; i >= 0; i--) {
             ckg_str_append_char(ret, ((str_length - 1) - (u64)i), str_length + 1, str[i]);
         }
 
         return ret;
     }
 
-    s64 ckg_str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length) {
+    i64 ckg_str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length) {
         ckg_assert(str);
         ckg_assert(substring);
 
@@ -1583,7 +1583,7 @@
             return -1;
         }
         
-        s64 ret_index = -1;
+        i64 ret_index = -1;
         for (u64 i = 0; i <= str_length - substring_length; i++) {
             if (ret_index != -1) {
                 break;
@@ -1595,7 +1595,7 @@
 
             CKG_StringView current_view = ckg_sv_create(str + i, substring_length);
             if (ckg_str_equal(substring, substring_length, current_view.data, current_view.length)) {
-                ret_index = (s64)i;
+                ret_index = (i64)i;
                 break;
             }
         }
@@ -1610,7 +1610,7 @@
         return ckg_str_index_of(str, str_length, contains, contains_length) != -1;
     }
 
-    s64 ckg_str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length) {
+    i64 ckg_str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length) {
         ckg_assert(str);
         ckg_assert(substring);
 
@@ -1626,7 +1626,7 @@
             return -1;
         }
         
-        s64 ret_index = -1;
+        i64 ret_index = -1;
         for (u64 i = 0; i <= (str_length - substring_length); i++) {
             if (str[i] != substring[0]) {
                 continue;
@@ -1634,7 +1634,7 @@
 
             CKG_StringView current_view = ckg_sv_create(str + i, substring_length);
             if (ckg_str_equal(current_view.data, current_view.length, substring, substring_length)) {
-                ret_index = (s64)i;
+                ret_index = (i64)i;
             }
         }
 

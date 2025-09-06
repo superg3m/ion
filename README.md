@@ -51,7 +51,7 @@ enum TokenType : u32 {
 
 ### TYPES
 <type> ::= <primitive_type> | <struct_type> | <enum_type>
-<primitive_type> ::= "s8" | "s16" | "s32" | "s64" | "u8" | "u16" | "u32" | "u64" | "f32" | "f64" | "b8" | "b16" | "b32"  | "string"
+<primitive_type> ::= "i8" | "i16" | "i32" | "i64" | "u8" | "u16" | "u32" | "u64" | "f32" | "f64" | "b8" | "b16" | "b32"  | "string"
 <struct_type> ::= <identifier>
 <enum_type> ::= <identifier>
 
