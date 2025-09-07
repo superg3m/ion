@@ -149,8 +149,10 @@ typedef struct IonToken {
 } IonToken;
 
 IonToken ion_token_from_string(IonTokenType token_type, CKG_StringView sv, int line);
+#define ION_TOKEN_CREATE_CUSTOM(token_type, name, line) ((IonToken){token_type, name, line, {0}})
 
 void token_print(IonToken token, char* indent);
 IonTokenType token_get_keyword(const char* str, u64 str_length);
 IonTokenType token_get_type_primitive(const char* str, u64 str_length);
 IonTokenType token_get_syntax(const char* str, u64 str_length);
+
