@@ -71,11 +71,6 @@
     #include <stdlib.h>
     #include <stddef.h>
 
-    typedef int8_t  b8;
-    typedef int16_t b16;
-    typedef int16_t b32;
-    typedef int64_t b64;
-
     typedef int8_t  i8;
     typedef int16_t i16;
     typedef int16_t i32;
@@ -83,8 +78,13 @@
 
     typedef uint8_t  u8;
     typedef uint16_t u16;
-    typedef uint16_t u32;
+    typedef uint32_t u32;
     typedef uint64_t u64;
+
+    typedef int8_t  b8;
+    typedef int16_t b16;
+    typedef int16_t b32;
+    typedef int64_t b64;
 
     typedef float  f32;
     typedef double f64;
@@ -216,6 +216,8 @@
         #define ckg_dassert_msg(expression, message, ...)
     #endif
 #endif
+
+
 
 #if defined(CKG_INCLUDE_ERRORS)
     /*
@@ -2118,13 +2120,14 @@
             return ((float)meta->count + (float)meta->dead_count) / (float)meta->capacity;
         }
 
-        u64 ckit_hashmap_resolve_collision(void* map, void* key, u64 inital_hash_index) {
+        i64 ckit_hashmap_resolve_collision(void* map, void* key, u64 inital_hash_index) {
             CKG_HashMapMeta* meta = (CKG_HashMapMeta*)map;
             u8* entries_base_address = NULLPTR;
             ckg_memory_copy(&entries_base_address, sizeof(void*), (u8*)map + meta->entries_offset, sizeof(void*));
 
-            u64 cannonical_hash_index = inital_hash_index;
+            i64 cannonical_hash_index = inital_hash_index;
 
+            u64 visited_count = 0;
             while (true) {
                 u8* entry = entries_base_address + (cannonical_hash_index * meta->entry_size);
                 u8* entry_key = NULLPTR;
@@ -2144,7 +2147,12 @@
                     break;
                 }
 
-                cannonical_hash_index++;
+                if (visited_count > meta->capacity) {
+                    return -1;
+                }
+
+                visited_count += 1;
+                cannonical_hash_index += 1;
                 cannonical_hash_index = cannonical_hash_index % meta->capacity;
             }
 
@@ -2206,7 +2214,7 @@
             void* entry_value_address;
             bool* entry_filled_address;
             bool* entry_dead_address;
-            u64 real_index;
+            i64 real_index;
         } HashMapContext;
 
         static HashMapContext ckg_hashmap_get_context(void* map) {
@@ -2237,6 +2245,10 @@
 
         bool ckg_hashmap_has_helper(void* map) {
             HashMapContext context = ckg_hashmap_get_context(map);
+            if (context.real_index == -1) {
+                return false;
+            }
+
             bool filled = *context.entry_filled_address;
             bool dead = *context.entry_dead_address;
 
@@ -2299,13 +2311,15 @@
                 }
 
                 bool entry_filled = *(bool*)(entry + meta->entry_filled_offset);
-                if (!entry_filled) {
+                bool entry_dead = *(bool*)(entry + meta->entry_dead_offset);
+                if (!entry_filled || entry_dead) {
                     continue;
                 }
 
                 u64 hash = meta->hash_fn(entry_key, meta->key_size);
                 u64 index = hash % meta->capacity;
-                u64 real_index = ckit_hashmap_resolve_collision((u8*)map, entry_key, index);
+                i64 real_index = ckit_hashmap_resolve_collision((u8*)map, entry_key, index);
+                ckg_assert(real_index != -1);
 
                 u8* new_entry = (u8*)new_entries + (real_index * meta->entry_size);
                 ckg_memory_copy(new_entry, meta->entry_size, entry, meta->entry_size);
