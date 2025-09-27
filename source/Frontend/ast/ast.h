@@ -13,7 +13,7 @@ typedef enum IonAstNodeKind {
 } IonAstNodeKind;
 // static_assert(ION_NK_ENUM_COUNT < 256, "IonAstNodeKind must fit in u8");
 
-static b32 ion_ast_nk_is_leaf(IonAstNodeKind nk) { return nk <= ION_NK_STRING_LIT; }
+static b32 ionAstNkIsLeaf(IonAstNodeKind nk) { return nk <= ION_NK_STRING_LIT; }
 static b32 ion_ast_nk_is_list(IonAstNodeKind nk) { return !ion_ast_nk_is_leaf(nk); }
 
 typedef struct IonAstNode {

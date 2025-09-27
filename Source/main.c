@@ -1,6 +1,9 @@
-#include <Core/ckg.h>
 #include <Frontend/token.h>
 #include <Frontend/lexer.h>
+
+#define CKG_IMPL
+#define CKG_OS_INCLUDE
+#include <Core/ckg.h>
 
 int main(int argc, char** argv) {
 	// Lexer -> Parser -> AST -> Interpret (AST Walk)
