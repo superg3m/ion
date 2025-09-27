@@ -1,158 +1,95 @@
 #pragma once
-#include <Core/ckg.h>
+#include <ckg.h>
 
-typedef enum IonTokenType {
+#define X_SYNTAX_TOKENS              \
+    X(ION_TS_PLUS, "+")              \
+    X(ION_TS_MINUS, "-")             \
+    X(ION_TS_STAR, "*")              \
+    X(ION_TS_DIVISION, "/")          \
+    X(ION_TS_MODULUS, "%")           \
+    X(ION_TS_LEFT_CURLY, "{")        \
+    X(ION_TS_RIGHT_CURLY, "}")       \
+    X(ION_TS_LEFT_PAREN, "(")        \
+    X(ION_TS_RIGHT_PAREN, ")")       \
+    X(ION_TS_LEFT_BRACKET, "[")      \
+    X(ION_TS_RIGHT_BRACKET, "]")     \
+    X(ION_TS_COLON, ":")             \
+    X(ION_TS_COMMA, ",")             \
+    X(ION_TS_SEMI_COLON, ";")        \
+    X(ION_TS_RIGHT_ARROW, "->")      \
+                                     \
+    X(ION_TSA_EQUALS, "=")           \
+    X(ION_TSA_INFER_EQUALS, ":=")    \
+    X(ION_TSA_PLUS_EQUALS, "+=")     \
+    X(ION_TSA_MINUS_EQUALS, "-=")    \
+    X(ION_TSA_STAR_EQUALS, "*=")     \
+    X(ION_TSA_DIVISION_EQUALS, "/=") \
+                                     \
+    X(ION_TSL_OR, "||")              \
+    X(ION_TSL_AND, "&&")             \
+                                     \
+    X(ION_TSC_EQUAL, "==")           \
+    X(ION_TSC_NOT_EQUAL, "!=")       \
+    X(ION_TSC_GT, ">")               \
+    X(ION_TSC_GT_OR_EQUAL, ">=")     \
+    X(ION_TSC_LT_OR_EQUAL, "<=")     \
+    X(ION_TSC_EQUALS_EQUALS, "==")   \
+
+#define X_LITERAL_TOKENS \
+    X(ION_TL_INTEGER)    \
+    X(ION_TL_FLOAT)      \
+    X(ION_TL_BOOLEAN)    \
+    X(ION_TL_CHARACTER)  \
+    X(ION_TL_STRING)     \
+
+
+#define X_KEYWORD_TOKENS            \
+    X(ION_TKW_IF, "if")             \
+    X(ION_TKW_ELSE, "else")         \
+    X(ION_TKW_FOR, "for")           \
+    X(ION_TKW_WHILE, "while")       \
+    X(ION_TKW_TRUE, "true")         \
+    X(ION_TKW_FALSE, "false")       \
+    X(ION_TKW_FUNC, "func")         \
+    X(ION_TKW_VAR, "var")           \
+    X(ION_TKW_NULL, "null")         \
+    X(ION_TKW_RETURN, "return")     \
+    X(ION_TKW_CONTINUE, "continue") \
+    X(ION_TKW_BREAK, "break")       \
+    X(ION_TKW_PRINT, "print")       \
+    X(ION_TKW_PRINTLN, "println")   \
+
+typedef enum IonTokenKind {
     ION_TOKEN_ILLEGAL_TOKEN,
     ION_TOKEN_EOF,
-    ION_TOKEN_NOT,                        // "!"
-    ION_TOKEN_BITWISE_NOT,                // "~"
-    ION_TOKEN_GENERIC,                    // "$"
-    ION_TOKEN_AMPERSAND,                  // "&"
-    ION_TOKEN_BITWISE_OR,                 // "|"
-    ION_TOKEN_BITWISE_XOR,                // "^"
-    ION_TOKEN_LEFT_PAREN,                 // "("
-    ION_TOKEN_RIGHT_PAREN,                // ")"
-    ION_TOKEN_STAR,                       // "*"
-    ION_TOKEN_PLUS,                       // "+"
-    ION_TOKEN_COMMA,                      // ","
-    ION_TOKEN_MINUS,                      // "-"
-    ION_TOKEN_RIGHT_ARROW,                // "->"
-    ION_TOKEN_DOT,                        // "."
-    ION_TOKEN_DIVISION,                   // "/"
-    ION_TOKEN_SEMI_COLON,                 // ";"
-    ION_TOKEN_LESS_THAN,                  // "<"
-    ION_TOKEN_ASSIGNMENT,                 // "="
-    ION_TOKEN_GREATER_THAN,               // ">"
-    ION_TOKEN_LEFT_BRACKET,               // "["
-    ION_TOKEN_RIGHT_BRACKET,              // "]"
-    ION_TOKEN_LEFT_CURLY,                 // "{"
-    ION_TOKEN_RIGHT_CURLY,                // "}"
-    ION_TOKEN_MODULUS,                    // "%"
-    ION_TOKEN_COLON,                      // ":"
-    ION_TOKEN_INCREMENT,                  // "++"
-    ION_TOKEN_DECREMENT,                  // "--"
-    ION_TOKEN_EQUALS,                     // "=="
-    ION_TOKEN_NOT_EQUALS,                 // "!="
-    ION_TOKEN_PLUS_EQUALS,                // "+="
-    ION_TOKEN_MINUS_EQUALS,               // "-="
-    ION_TOKEN_MULTIPLICATION_EQUALS,      // "*="
-    ION_TOKEN_DIVISION_EQUALS,            // "/="
-    ION_TOKEN_GREATER_THAN_EQUALS,        // ">="
-    ION_TOKEN_LESS_THAN_EQUALS,           // "<="
-    ION_TOKEN_BITWISE_LEFT_SHIFT,         // "<<"
-    ION_TOKEN_BITWISE_RIGHT_SHIFT,        // ">>"
-    ION_TOKEN_BITWISE_LEFT_SHIFT_EQUALS,  // "<<="
-    ION_TOKEN_BITWISE_RIGHT_SHIFT_EQUALS, // ">>="
-    ION_TOKEN_COLON_EQUALS,               // ":="
-    ION_TOKEN_UNINITIALIZED,              // "---"
-    ION_TOKEN_DYNAMIC_ARRAY,              // "[..]"
-    ION_TOKEN_AND,                        // "&&"
-    ION_TOKEN_OR,                         // "||"
-    ION_TOKEN_COMMENT,                    // "//"
-    ION_TOKEN_IDENTIFIER,                 // any_word
-    ION_TOKEN_UNDERSCORE_IDENTIFIER,       // _
-    ION_TOKEN_STRING_LITERAL,             // "TESTING"
-    ION_TOKEN_INTEGER_LITERAL,            // 6
-    ION_TOKEN_FLOAT_LITERAL,              // 2.523
-    ION_TOKEN_CHARACTER_LITERAL,          // 'a'
-    ION_TOKEN_IF,                         // if
-    ION_TOKEN_ELSE,                       // else
-    ION_TOKEN_FOR,                        // for
-    ION_TOKEN_WHILE,                      // while
-    ION_TOKEN_TRUE,                       // true
-    ION_TOKEN_FALSE,                      // false
-    ION_TOKEN_NULL,                       // null
-    ION_TOKEN_RETURN,                     // return
-    ION_TOKEN_VAR,                        // var
-    ION_TOKEN_FUNC,                       // func
-    ION_TOKEN_PRIMITIVE_TYPE,             // any primitive type
-    ION_TOKEN_COUNT
-} IonTokenType;
+    
+    #define X(name, str) name,
+        X_SYNTAX_TOKENS
+    #undef X
 
-static char* token_strings[ION_TOKEN_COUNT] = {
-    stringify(ION_TOKEN_ILLEGAL_TOKEN),
-    stringify(ION_TOKEN_EOF),
-    stringify(ION_TOKEN_NOT),
-    stringify(ION_TOKEN_BITWISE_NOT),
-    stringify(ION_TOKEN_GENERIC),
-    stringify(ION_TOKEN_AMPERSAND),
-    stringify(ION_TOKEN_BITWISE_OR),
-    stringify(ION_TOKEN_BITWISE_XOR),
-    stringify(ION_TOKEN_LEFT_PAREN),
-    stringify(ION_TOKEN_RIGHT_PAREN),
-    stringify(ION_TOKEN_STAR),
-    stringify(ION_TOKEN_PLUS),
-    stringify(ION_TOKEN_COMMA),
-    stringify(ION_TOKEN_MINUS),
-    stringify(ION_TOKEN_RIGHT_ARROW),
-    stringify(ION_TOKEN_DOT),
-    stringify(ION_TOKEN_DIVISION),
-    stringify(ION_TOKEN_SEMI_COLON),
-    stringify(ION_TOKEN_LESS_THAN),
-    stringify(ION_TOKEN_ASSIGNMENT),
-    stringify(ION_TOKEN_GREATER_THAN),
-    stringify(ION_TOKEN_LEFT_BRACKET),
-    stringify(ION_TOKEN_RIGHT_BRACKET),
-    stringify(ION_TOKEN_LEFT_CURLY),
-    stringify(ION_TOKEN_RIGHT_CURLY),
-    stringify(ION_TOKEN_MODULUS),
-    stringify(ION_TOKEN_COLON),
-    stringify(ION_TOKEN_INCREMENT),
-    stringify(ION_TOKEN_DECREMENT),
-    stringify(ION_TOKEN_EQUALS),
-    stringify(ION_TOKEN_NOT_EQUALS),
-    stringify(ION_TOKEN_PLUS_EQUALS),
-    stringify(ION_TOKEN_MINUS_EQUALS),
-    stringify(ION_TOKEN_MULTIPLICATION_EQUALS),
-    stringify(ION_TOKEN_DIVISION_EQUALS),
-    stringify(ION_TOKEN_GREATER_THAN_EQUALS),
-    stringify(ION_TOKEN_LESS_THAN_EQUALS),
-    stringify(ION_TOKEN_BITWISE_LEFT_SHIFT),
-    stringify(ION_TOKEN_BITWISE_RIGHT_SHIFT),
-    stringify(ION_TOKEN_BITWISE_LEFT_SHIFT_EQUALS),
-    stringify(ION_TOKEN_BITWISE_RIGHT_SHIFT_EQUALS),
-    stringify(ION_TOKEN_COLON_EQUALS),
-    stringify(ION_TOKEN_UNINITIALIZED),
-    stringify(ION_TOKEN_DYNAMIC_ARRAY),
-    stringify(ION_TOKEN_AND),
-    stringify(ION_TOKEN_OR),
-    stringify(ION_TOKEN_COMMENT),
-    stringify(ION_TOKEN_IDENTIFIER),
-    stringify(ION_TOKEN_UNDERSCORE_IDENTIFIER),
-    stringify(ION_TOKEN_STRING_LITERAL),
-    stringify(ION_TOKEN_INTEGER_LITERAL),
-    stringify(ION_TOKEN_FLOAT_LITERAL),
-    stringify(ION_TOKEN_CHARACTER_LITERAL),
-    stringify(ION_TOKEN_IF),
-    stringify(ION_TOKEN_ELSE),
-    stringify(ION_TOKEN_FOR),
-    stringify(ION_TOKEN_WHILE),
-    stringify(ION_TOKEN_TRUE),
-    stringify(ION_TOKEN_FALSE),
-    stringify(ION_TOKEN_NULL),
-    stringify(ION_TOKEN_RETURN),
-    stringify(ION_TOKEN_VAR),
-    stringify(ION_TOKEN_FUNC),
-    stringify(ION_TOKEN_PRIMITIVE_TYPE),
-};
+    #define X(name) name,
+        X_LITERAL_TOKENS
+    #undef X
+
+    #define X(name, str) name,
+        X_KEYWORD_TOKENS
+    #undef X
+
+    ION_TOKEN_IDENTIFIER,
+
+    ION_TOKEN_COUNT
+} IonTokenKind;
 
 typedef struct IonToken {
-    IonTokenType type;
-    CKG_StringView name;
+    IonTokenKind kind;
+    CKG_StringView lexeme;
     int line;
-    union {
-        char c;
-        int i;
-        double f;
-        bool b;
-    };
 } IonToken;
 
-IonToken ion_token_from_string(IonTokenType token_type, CKG_StringView sv, int line);
-#define ION_TOKEN_CREATE_CUSTOM(token_type, name, line) ((IonToken){token_type, name, line, {0}})
+IonToken ionTokenCreate(IonTokenKind kind, CKG_StringView lexeme, int line);
 
-void token_print(IonToken token, char* indent);
-IonTokenType token_get_keyword(const char* str, u64 str_length);
-IonTokenType token_get_type_primitive(const char* str, u64 str_length);
-IonTokenType token_get_syntax(const char* str, u64 str_length);
+const char* ionTokenGetString(IonToken token);
+void ionTokenPrint(IonToken token);
+IonTokenKind ionTokenGetKeyword(CKG_StringView lexeme);
+IonTokenKind ionTokenGetSyntax(CKG_StringView lexeme);
 

@@ -71,23 +71,15 @@
     #include <stdlib.h>
     #include <stddef.h>
 
-    typedef int8_t  i8;
-    typedef int16_t i16;
-    typedef int16_t i32;
-    typedef int64_t i64;
+    typedef int8_t  s8;
+    typedef int16_t s16;
+    typedef int16_t s32;
+    typedef int64_t s64;
 
     typedef uint8_t  u8;
     typedef uint16_t u16;
-    typedef uint32_t u32;
+    typedef uint16_t u32;
     typedef uint64_t u64;
-
-    typedef int8_t  b8;
-    typedef int16_t b16;
-    typedef int16_t b32;
-    typedef int64_t b64;
-
-    typedef float  f32;
-    typedef double f64;
 
     #define NULLPTR 0
     #define PI 3.14159265359
@@ -207,17 +199,7 @@
         #define ckg_assert(expression)
         #define ckg_assert_msg(expression, message, ...)
     #endif
-
-    #if defined(ION_CC_DEBUG)
-        #define ckg_dassert(expression) MACRO_ckg_assert((expression), __func__, __FILE__, __LINE__)
-        #define ckg_dassert_msg(expression, message, ...) MACRO_ckg_assert_msg((expression), __func__, __FILE__, __LINE__, message, ##__VA_ARGS__)
-    #else
-        #define ckg_dassert(expression)
-        #define ckg_dassert_msg(expression, message, ...)
-    #endif
 #endif
-
-
 
 #if defined(CKG_INCLUDE_ERRORS)
     /*
@@ -321,7 +303,7 @@
         size_t element_size;
     } CKG_VectorHeader;
 
-    #define CKG_Vector(TYPE) TYPE*
+    #define CKG_Vector(type) type*
 
     CKG_API void* ckg_vector_grow(void* vector, size_t element_size, int capacity);
     CKG_API void* MACRO_ckg_vector_free(void* vector);
@@ -737,10 +719,10 @@
      * @param str_length 
      * @param substring 
      * @param substring_length 
-     * @return i64 
+     * @return s64 
      */
-    CKG_API i64  ckg_str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
-    CKG_API i64  ckg_str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
+    CKG_API s64  ckg_str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
+    CKG_API s64  ckg_str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
     CKG_API bool ckg_str_starts_with(const char* str, u64 str_length, const char* starts_with, u64 starts_with_length);
     CKG_API bool ckg_str_ends_with(const char* str, u64 str_length, const char* ends_with, u64 ends_with_length);
 
@@ -758,7 +740,7 @@
     
     CKG_API CKG_StringView  ckg_sv_create(const char* data, u64 length);
     CKG_API CKG_StringView  ckg_sv_between_delimiters(const char* str, u64 str_length, const char* start_delimitor, u64 start_delimitor_length, const char* end_delimitor, u64 end_delimitor_length);
-    CKG_API CKG_StringView* ckg_sv_split(const char* data, u64 length, const char* delimitor, u64 delimitor_length);
+    CKG_API CKG_Vector(CKG_StringView) ckg_sv_split(const char* data, u64 length, const char* delimitor, u64 delimitor_length);
 
     #define CKG_SV_LIT(literal) (CKG_StringView){literal, sizeof(literal) - 1}
     #define CKG_SV_NULL() (CKG_StringView){NULLPTR, 0}
@@ -1068,8 +1050,8 @@
             return;
         }
 
-        i64 start_delimitor_index = ckg_str_index_of(message, message_length, LOGGER_START_DELIM, sizeof(LOGGER_START_DELIM) - 1);
-        i64 end_delimitor_index = ckg_str_index_of(message, message_length, LOGGER_END_DELIM, sizeof(LOGGER_END_DELIM) - 1);
+        s64 start_delimitor_index = ckg_str_index_of(message, message_length, LOGGER_START_DELIM, sizeof(LOGGER_START_DELIM) - 1);
+        s64 end_delimitor_index = ckg_str_index_of(message, message_length, LOGGER_END_DELIM, sizeof(LOGGER_END_DELIM) - 1);
 
         CKG_StringView left_side_view = ckg_sv_create(message, (u64)start_delimitor_index);
         CKG_StringView right_side_view = ckg_sv_create(message + ((u64)end_delimitor_index + (sizeof(LOGGER_END_DELIM) - 1)), (u64)message_length);
@@ -1457,8 +1439,8 @@
         ckg_assert(end_delimitor);
         ckg_assert(!ckg_str_equal(start_delimitor, start_delimitor_length, end_delimitor, end_delimitor_length));
 
-        i64 start_delimitor_index = ckg_str_index_of(str, str_length, start_delimitor, start_delimitor_length); 
-        i64 end_delimitor_index = ckg_str_index_of(str, str_length, end_delimitor, end_delimitor_length);
+        s64 start_delimitor_index = ckg_str_index_of(str, str_length, start_delimitor, start_delimitor_length); 
+        s64 end_delimitor_index = ckg_str_index_of(str, str_length, end_delimitor, end_delimitor_length);
         if (start_delimitor_index == -1 || end_delimitor_index == -1) {
             return CKG_SV_NULL();
         }
@@ -1483,17 +1465,17 @@
         ckg_assert_msg(delimitor_length > 0, "delimitor can not be a empty string!\n");
 
         if (length == 0) {
-            CKG_StringView* ret_vector = NULLPTR;
+            CKG_Vector(CKG_StringView) ret_vector = NULLPTR;
             CKG_StringView current = ckg_sv_create(data, length);
             ckg_vector_push(ret_vector, current);
 
             return ret_vector;
         }
 
-        CKG_StringView* ret_vector = NULLPTR;
+        CKG_Vector(CKG_StringView) ret_vector = NULLPTR;
         CKG_StringView str_view = ckg_sv_create(data, length);
         while (true) {
-            i64 found_index = ckg_str_index_of(str_view.data, str_view.length, delimitor, delimitor_length);
+            s64 found_index = ckg_str_index_of(str_view.data, str_view.length, delimitor, delimitor_length);
             if (found_index == -1) {
                 ckg_vector_push(ret_vector, str_view);
                 return ret_vector;
@@ -1562,14 +1544,14 @@
         ckg_assert(str);
 
         char* ret = (char*)ckg_alloc(str_length + 1);
-        for (i64 i = (i64)str_length - 1; i >= 0; i--) {
+        for (s64 i = (s64)str_length - 1; i >= 0; i--) {
             ckg_str_append_char(ret, ((str_length - 1) - (u64)i), str_length + 1, str[i]);
         }
 
         return ret;
     }
 
-    i64 ckg_str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length) {
+    s64 ckg_str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length) {
         ckg_assert(str);
         ckg_assert(substring);
 
@@ -1585,7 +1567,7 @@
             return -1;
         }
         
-        i64 ret_index = -1;
+        s64 ret_index = -1;
         for (u64 i = 0; i <= str_length - substring_length; i++) {
             if (ret_index != -1) {
                 break;
@@ -1597,7 +1579,7 @@
 
             CKG_StringView current_view = ckg_sv_create(str + i, substring_length);
             if (ckg_str_equal(substring, substring_length, current_view.data, current_view.length)) {
-                ret_index = (i64)i;
+                ret_index = (s64)i;
                 break;
             }
         }
@@ -1612,7 +1594,7 @@
         return ckg_str_index_of(str, str_length, contains, contains_length) != -1;
     }
 
-    i64 ckg_str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length) {
+    s64 ckg_str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length) {
         ckg_assert(str);
         ckg_assert(substring);
 
@@ -1628,7 +1610,7 @@
             return -1;
         }
         
-        i64 ret_index = -1;
+        s64 ret_index = -1;
         for (u64 i = 0; i <= (str_length - substring_length); i++) {
             if (str[i] != substring[0]) {
                 continue;
@@ -1636,7 +1618,7 @@
 
             CKG_StringView current_view = ckg_sv_create(str + i, substring_length);
             if (ckg_str_equal(current_view.data, current_view.length, substring, substring_length)) {
-                ret_index = (i64)i;
+                ret_index = (s64)i;
             }
         }
 
@@ -2120,12 +2102,12 @@
             return ((float)meta->count + (float)meta->dead_count) / (float)meta->capacity;
         }
 
-        i64 ckit_hashmap_resolve_collision(void* map, void* key, u64 inital_hash_index) {
+        s64 ckit_hashmap_resolve_collision(void* map, void* key, u64 inital_hash_index) {
             CKG_HashMapMeta* meta = (CKG_HashMapMeta*)map;
             u8* entries_base_address = NULLPTR;
             ckg_memory_copy(&entries_base_address, sizeof(void*), (u8*)map + meta->entries_offset, sizeof(void*));
 
-            i64 cannonical_hash_index = inital_hash_index;
+            s64 cannonical_hash_index = inital_hash_index;
 
             u64 visited_count = 0;
             while (true) {
@@ -2214,7 +2196,7 @@
             void* entry_value_address;
             bool* entry_filled_address;
             bool* entry_dead_address;
-            i64 real_index;
+            s64 real_index;
         } HashMapContext;
 
         static HashMapContext ckg_hashmap_get_context(void* map) {
@@ -2318,7 +2300,7 @@
 
                 u64 hash = meta->hash_fn(entry_key, meta->key_size);
                 u64 index = hash % meta->capacity;
-                i64 real_index = ckit_hashmap_resolve_collision((u8*)map, entry_key, index);
+                s64 real_index = ckit_hashmap_resolve_collision((u8*)map, entry_key, index);
                 ckg_assert(real_index != -1);
 
                 u8* new_entry = (u8*)new_entries + (real_index * meta->entry_size);
@@ -2405,7 +2387,7 @@
                     fread(vector, header.element_size, header.count, file_handle);
                     return vector;
                 } else if (data_type == CKG_DATA_TYPE_STRING_VIEW) {
-                    CKG_StringView* sv_vector = (CKG_StringView*)ckg_vector_grow(NULLPTR, header.element_size, header.capacity);
+                    CKG_Vector(CKG_StringView) sv_vector = (CKG_StringView*)ckg_vector_grow(NULLPTR, header.element_size, header.capacity);
 
                     for (int i = 0; i < header.count; i++) {
                         CKG_StringView sv;
@@ -2419,7 +2401,7 @@
 
                     return sv_vector;
                 } else if (data_type == CKG_DATA_TYPE_CSTRING) {
-                    char** string_vector = (char**)ckg_vector_grow(NULLPTR, header.element_size, header.capacity);
+                    CKG_Vector(char*) string_vector = (char**)ckg_vector_grow(NULLPTR, header.element_size, header.capacity);
 
                     for (int i = 0; i < header.count; i++) {
                         size_t char_count = 0;

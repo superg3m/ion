@@ -1,5 +1,7 @@
-#include <Frontend/parser.h>
-#include <Frontend/ast.h>
+/*
+
+#include <frontend/parser/parser.h>
+#include <frontend/ast.h>
 
 static IonToken parser_peek_nth_token(Parser* parser, int n) {
     if (parser->current + n > ckg_vector_count(parser->tokens) - 1) {
@@ -103,7 +105,6 @@ Expression* Parser::parse_expression() {
     return this->parse_additive_expression();
 }
 
-/*
 IonAstNodeH parse_statement(Parser* parser, bool requires_semi_colon) {
     IonTokenType next_token_type = parser_peek_nth_token(parser, 0).type;
 
@@ -145,7 +146,7 @@ IonAstNodeH parse_statement(Parser* parser, bool requires_semi_colon) {
 
 
 
-
+/*
 def tokens_to_postfix()
     case "var":
         eat("var")
@@ -155,8 +156,6 @@ def tokens_to_postfix()
 
         ast.push(  VarDeff( ())
 
-
-/*
 
 output_pf = []  # SY converts to pf
 op_stack = []
