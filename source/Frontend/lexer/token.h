@@ -49,7 +49,7 @@
     X(ION_TKW_WHILE, "while")       \
     X(ION_TKW_TRUE, "true")         \
     X(ION_TKW_FALSE, "false")       \
-    X(ION_TKW_FUNC, "func")         \
+    X(ION_TKW_FN, "fn")             \
     X(ION_TKW_VAR, "var")           \
     X(ION_TKW_NULL, "null")         \
     X(ION_TKW_RETURN, "return")     \

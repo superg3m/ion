@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../lexer/token.h"
+#include "../ts/type_system.h"
 
 // |00000|000 00000000 00000000 00000000
 // bit 27: LEAF_NODE
@@ -48,7 +49,7 @@ typedef struct IonNode {
     IonNodeKind kind;
     IonToken token; // return, binary: operator, int, float, string, bool, identifer
     u32 desc_count;
-    // type?
+    Type type;
     union {
         int i;
         float f;

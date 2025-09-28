@@ -54,7 +54,7 @@ bool ionParserConsumeOnMatch(IonParser* parser, IonTokenKind expected_kind) {
     return false;
 }
 
-Type parseType(IonParser* parser) {
+Type ionParseType(IonParser* parser) {
 	int array_count = 0;
 	while (ionParserPeekNthToken(parser, 0).kind == ION_TS_LEFT_BRACKET) {
 		ionParserConsumeOnMatch(parser, ION_TS_LEFT_BRACKET);
@@ -277,12 +277,59 @@ Type parseType(IonParser* parser) {
         ionParserExpect(parser, ION_TKW_VAR);
         IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
         ionParserExpect(parser, ION_TS_COLON);
-        // var dataType *TS.Type
+        Type type = ionTypeUnresolved();
         if (ionParserPeekNthToken(parser, 0).kind != ION_TS_EQUALS) {
-            // dataType = parser.parseType();
+            type = ionParseType(parser);
         }
 
         IonNode node = ionNodeCreate(ION_NK_VAR_DECL, ident);
+        node.type = type;
+        ast[start] = node;
+
+        ionParserExpect(parser, ION_TS_EQUALS);
+        index = ionParseExpression(parser, ast, index + 1);
+        ast[start].desc_count = index - (start + 1);
+        ionParserExpect(parser, ION_TS_SEMI_COLON);
+
+        return index;
+    }
+
+    CKG_Vector(Parameter) parseParameters(IonParser* parser) {
+        CKG_Vector(Parameter) params = NULLPTR;
+
+        ionParserExpect(parser, ION_TS_LEFT_PAREN);
+        while (ionParserConsumeOnMatch(parser, ION_TS_RIGHT_PAREN)) {
+            IonToken param = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+            ionParserExpect(parser, ION_TS_COLON);
+            Type type = ionParseType(parser);
+
+            args = append(args, TS.Parameter{
+                Tok:      param,
+                DeclType: dataType,
+            })
+
+            if parser.peekNthToken(0).Kind != Token.RIGHT_PAREN {
+                parser.expect(Token.COMMA)
+            }
+        }
+
+        return args
+    }
+
+    int ionParseFuncDecl(IonParser* parser, IonNode* ast, int index) {
+        int start = index;
+
+        ionParserExpect(parser, ION_TKW_FN);
+        IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+        params := parser.parseParameters()
+        parser.expect(Token.RIGHT_ARROW)
+        Type return_type = ionParseType(parser);
+        block := parser.parseStatementBlock().(*AST.StatementBlock)
+
+        declType := TS.NewType(TS.FUNCTION, returnType, params)
+
+        IonNode node = ionNodeCreate(ION_NK_VAR_DECL, ident);
+        node.type = type;
         ast[start] = node;
 
         ionParserExpect(parser, ION_TS_EQUALS);
@@ -298,8 +345,8 @@ Type parseType(IonParser* parser) {
 
         if (current.kind == ION_TKW_VAR) {
             return ionParseVarDecl(parser, ast, index);
-        } else if (current.kind == ION_TKW_FUNC) {
-            // return ionParseFuncDecl(parser, ast, index);
+        } else if (current.kind == ION_TKW_FN) {
+            return ionParseFuncDecl(parser, ast, index);
         }
     
         ckg_assert(false);
@@ -317,7 +364,13 @@ CKG_Vector(IonNode) ionParseProgram(CKG_Vector(IonToken) tokens) {
     int ast_upperbound = ckg_vector_count(tokens);
     CKG_Vector(IonNode) ast = ckg_vector_grow(NULLPTR, sizeof(IonNode), ast_upperbound);
 
-    ionParseExpression(&parser, ast, 0);
+    int index = 0;
+    while (parser.current < (ckg_vector_count(parser.tokens) - 1)) {
+		index = ionParseDeclaration(&parser, ast, index);
+		if (index == -1) {
+			ionParserReportError(&parser, "Unable to parse declaration");
+		}
+	}
 
     return ast;
 }

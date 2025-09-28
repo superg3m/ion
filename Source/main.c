@@ -2,6 +2,8 @@
 #include "frontend/lexer/lexer.h"
 #include "frontend/parser/parser.h"
 
+#include "frontend/ts/type_system.h"
+
 #define CKG_IMPL
 #define CKG_OS_INCLUDE
 #include <ckg.h>
@@ -25,6 +27,10 @@ int main() {
 	}
 
 	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
+	ckg_assert(ast[0].type.mask & ION_TYPE_INT);
+	ckg_assert(ast[0].type.mask & ION_TYPE_FULLY_COMPARABLE);
+	ckg_assert(ast[0].type.mask & ION_TYPE_OP_ALL);
+	// ckg_assert(ionNodeIsExpression(ast + 1));
 	//IonNode* left = ionNodeGetLeft(ast, 0);
 	//ckg_assert(ionNodeIsLeaf(left));
 	//IonNode* right = ionNodeGetRight(ast, 0);
