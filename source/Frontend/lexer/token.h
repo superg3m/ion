@@ -25,15 +25,15 @@
     X(ION_TSA_STAR_EQUALS, "*=")     \
     X(ION_TSA_DIVISION_EQUALS, "/=") \
                                      \
-    X(ION_TS_OR, "||")              \
-    X(ION_TS_AND, "&&")             \
+    X(ION_TS_LOGICAL_OR, "||")       \
+    X(ION_TS_LOGICAL_AND, "&&")      \
                                      \
-    X(ION_TS_EQUAL, "==")           \
-    X(ION_TS_NOT_EQUAL, "!=")       \
-    X(ION_TS_GT, ">")               \
-    X(ION_TS_GT_OR_EQUAL, ">=")     \
-    X(ION_TS_LT_OR_EQUAL, "<=")     \
-    X(ION_TS_EQUALS_EQUALS, "==")   \
+    X(ION_TS_EQUALS_EQUALS, "==")    \
+    X(ION_TS_NOT_EQUALS, "!=")       \
+    X(ION_TS_GT, ">")                \
+    X(ION_TS_GT_OR_EQUAL, ">=")      \
+    X(ION_TS_LT, "<")                \
+    X(ION_TS_LT_OR_EQUAL, "<=")      \
 
 #define X_LITERAL_TOKENS \
     X(ION_TL_INTEGER)    \

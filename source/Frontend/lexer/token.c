@@ -42,15 +42,18 @@ void ionTokenPrint(IonToken token) {
 IonTokenKind ionTokenGetKeyword(CKG_StringView sv) {
     CKG_HashMap(CKG_StringView, IonTokenKind)* keyword_map = NULL;
     ckg_hashmap_init_string_view_hash(keyword_map, CKG_StringView, IonTokenKind);
-    #define X(token, str) ckg_hashmap_put(keyword_map, ckg_sv_create(str, sizeof(str)), token);
+    #define X(token, str) ckg_hashmap_put(keyword_map, ckg_sv_create(str, sizeof(str) - 1), token);
         X_KEYWORD_TOKENS
     #undef X
+
+    ckg_hashmap_put(keyword_map, ckg_sv_create("true", sizeof("true") - 1), ION_TL_BOOLEAN);
+    ckg_hashmap_put(keyword_map, ckg_sv_create("false", sizeof("false") - 1), ION_TL_BOOLEAN);
 
     if (!ckg_hashmap_has(keyword_map, sv)) {
         return ION_TOKEN_ILLEGAL_TOKEN;
     }
 
-    return ckg_hashmap_has(keyword_map, sv);
+    return ckg_hashmap_get(keyword_map, sv);
 }
 
 IonTokenKind ionTokenGetSyntax(CKG_StringView sv) {
