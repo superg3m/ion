@@ -3,13 +3,13 @@
 
 typedef struct Scope {
 	struct Scope* parent   ;
-	CKG_HashMap(CKG_StringView, IonNode)* variables;
+	CKG_HashMap(CKG_StringView, IonNode*)* variables;
 } Scope;
 
 Scope ionScopeCreate(Scope* parent) {
     Scope ret;
     ret.parent = parent;
-    ckg_hashmap_init_string_view_hash(ret.variables, CKG_StringView, IonNode);
+    ckg_hashmap_init_string_view_hash(ret.variables, CKG_StringView, IonNode*);
 
     return ret;
 }
@@ -27,7 +27,7 @@ bool ionScopeHas(Scope* self, CKG_StringView key) {
     return false;
 }
 
-IonNode ionScopeGet(Scope* self, CKG_StringView key) {
+IonNode* ionScopeGet(Scope* self, CKG_StringView key) {
     Scope* current = self;
     while (current != NULLPTR) {
         if (ckg_hashmap_has(current->variables, key)) {
@@ -38,10 +38,10 @@ IonNode ionScopeGet(Scope* self, CKG_StringView key) {
     }
 
     ckg_assert(false);
-    return (IonNode){};
+    return NULLPTR;
 }
 
-void ionScopeSet(Scope* self, CKG_StringView key, IonNode value) {
+void ionScopeSet(Scope* self, CKG_StringView key, IonNode* value) {
     Scope* current = self;
     while (current != NULLPTR) {
         if (ckg_hashmap_has(current->variables, key)) {
@@ -73,13 +73,13 @@ IonNode* ionInterpretNodes(IonNode* node, Scope* scope) {
     return node;
 }
 
-IonNode ionInterpretExpression(IonNode* expr, Scope* scope) {
+IonNode* ionInterpretExpression(IonNode* expr, Scope* scope) {
     switch (expr->kind) {
         case ION_NK_INTEGER_EXPR:
         case ION_NK_BOOLEAN_EXPR:
         case ION_NK_FLOAT_EXPR:
         case ION_NK_STRING_EXPR: {
-            return *expr;
+            return expr;
         } break;
 
         case ION_NK_IDENTIFIER_EXPR: {
@@ -91,7 +91,7 @@ IonNode ionInterpretExpression(IonNode* expr, Scope* scope) {
         } break;
     }
 
-    return (IonNode){};
+    return NULLPTR;
 }
 
 void ionPrintExpression(IonNode* expr, Scope* scope) {
@@ -116,8 +116,7 @@ void ionPrintExpression(IonNode* expr, Scope* scope) {
         } break;
 
         case ION_NK_IDENTIFIER_EXPR: {
-            IonNode e = ionInterpretExpression(expr, scope);
-            ionPrintExpression(&e, scope);
+            ionPrintExpression(ionInterpretExpression(expr, scope), scope);
         } break;
 
         default: {
@@ -136,9 +135,9 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
                 stmt->token.lexeme.length, stmt->token.lexeme.data
             );
 
-            IonNode rhs = ionInterpretExpression(ionNodeGetRHS(stmt), scope);
+            IonNode* rhs = ionInterpretExpression(ionNodeGetRHS(stmt), scope);
             ckg_assert_msg(
-                (rhs.type.mask & ION_TYPE_VOID) == 0,
+                (rhs->type.mask & ION_TYPE_VOID) == 0,
                 "Line %d | Attempting to assign void to variable: %.*s", 
                 stmt->token.line,
                 stmt->token.lexeme.length, stmt->token.lexeme.data
@@ -187,7 +186,7 @@ IonNode* ionInterpretDeclaration(IonNode* decl, Scope* scope) {
     switch (decl->kind) {
         case ION_NK_VAR_DECL: {
             IonNode* RHS = decl + 1;
-            ionScopeSet(scope, decl->token.lexeme, *RHS);
+            ionScopeSet(scope, decl->token.lexeme, RHS);
         } break;
 
         case ION_NK_FUNC_DECL: {
