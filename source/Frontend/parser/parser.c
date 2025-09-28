@@ -281,6 +281,7 @@ Type ionParseType(IonParser* parser) {
         IonToken opening = ionParserExpect(parser, ION_TS_LEFT_CURLY);
         ast[start] = ionNodeCreate(ION_NK_BLOCK_STMT, opening);
         
+        index += 1;
         while (!ionParserConsumeOnMatch(parser, ION_TS_RIGHT_CURLY)) {
             int possible = ionParseDeclaration(parser, ast, index);
             if (possible != -1) {
@@ -296,6 +297,8 @@ Type ionParseType(IonParser* parser) {
 
             ckg_assert(false);
         }
+
+        ast[start].desc_count = index - (start + 1);
 
         return index;
     }

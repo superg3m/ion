@@ -2,4 +2,6 @@ var x: int = 5;
 
 fn main() -> void {
     println(5);
+
+    println(64.3);
 }

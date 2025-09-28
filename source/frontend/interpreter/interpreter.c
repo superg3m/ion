@@ -58,6 +58,21 @@ void ionScopeSet(Scope* self, CKG_StringView key, IonNode value) {
 Scope global_scope;
 CKG_HashMap(CKG_StringView, IonNode*)* global_function = NULLPTR;
 
+IonNode* ionInterpretNode(IonNode* node, Scope* scope);
+
+IonNode* ionInterpretNodes(IonNode* node, Scope* scope) {
+    int inital_desc_count = node->desc_count;
+    int current_desc_count = 0;
+
+    node += 1;
+    while (inital_desc_count != current_desc_count) {
+        current_desc_count += (1 + node->desc_count);
+		node = ionInterpretNode(node, scope);
+	}
+
+    return node;
+}
+
 void ionInterpretExpression(IonNode* expr, Scope* scope) {
     switch (expr->kind) {
         case ION_NK_VAR_DECL: {
@@ -83,7 +98,7 @@ void printExpression(IonNode* expr, Scope* scope) {
         } break;
 
         case ION_NK_FLOAT_EXPR: {
-            CKG_LOG_PRINT("%f", expr->data.f);
+            CKG_LOG_PRINT("%.4g", expr->data.f);
         } break;
 
         case ION_NK_BOOLEAN_EXPR: {
@@ -101,7 +116,7 @@ void printExpression(IonNode* expr, Scope* scope) {
     }
 }
 
-void ionInterpretStatement(IonNode* stmt, Scope* scope) {
+IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
     switch (stmt->kind) {
         case ION_NK_ASSIGNMENT_STMT: {
 
@@ -110,28 +125,31 @@ void ionInterpretStatement(IonNode* stmt, Scope* scope) {
         case ION_NK_FUNC_CALL_SE: {
             IonNode* func_decl = ckg_hashmap_get(global_function, stmt->token.lexeme);
 
-            int arg_count = ckg_vector_count(stmt->data.arguments);
-            int param_count = ckg_vector_count(func_decl->type.parameters);
+            int arg_count = stmt->data.arguments ? ckg_vector_count(stmt->data.arguments) : 0;
+            int param_count = func_decl->type.parameters ? ckg_vector_count(func_decl->type.parameters) : 0;
 
             if (param_count != arg_count) {
-                // panic(fmt.Sprintf("expected %d parameter(s), got %d", argCount, paramCount))
+                ckg_assert_msg(false, "expected %d parameter(s), got %d\n", arg_count, param_count);
             }
 
+            Scope function_scope = ionScopeCreate(&global_scope);
             /*
-            functionScope := CreateScope(&globalScope)
             for i := 0; i < argCount; i++ {
                 param := functionDeclaration.DeclType.Parameters[i]
                 arg := v.Arguments[i]
                 functionScope.set(param.Tok, interpretExpression(arg, scope))
             }
-
-            return interpretExpression(interpretNodes(functionDeclaration.Block.Body, &functionScope), &functionScope)
             */
+
+            IonNode* block = func_decl + 1;
+            return ionInterpretNodes(block, &function_scope);
         } break;
 
         case ION_NK_PRINT_STMT: {
             printExpression(ionNodeGetExpr(stmt), scope);
             CKG_LOG_PRINT("\n");
+
+            return stmt + 1 + stmt->desc_count;
         } break;
         
         default: {
@@ -147,7 +165,7 @@ IonNode* ionInterpretDeclaration(IonNode* decl, Scope* scope) {
         } break;
 
         case ION_NK_FUNC_DECL: {
-
+            ckg_hashmap_put(global_function, decl->token.lexeme, decl);
         } break;
         
         default: {
@@ -158,11 +176,11 @@ IonNode* ionInterpretDeclaration(IonNode* decl, Scope* scope) {
    return decl + 1 + decl->desc_count;
 }
 
-void interpretNode(IonNode* node, Scope* scope) {
+IonNode* ionInterpretNode(IonNode* node, Scope* scope) {
     if (ionNodeIsDeclaration(node)) {
-        ionInterpretDeclaration(node, scope);
+        return ionInterpretDeclaration(node, scope);
     } else if (ionNodeIsStatement(node)) {
-        ionInterpretStatement(node, scope);
+        return ionInterpretStatement(node, scope);
     } else {
         ckg_assert(false);
     }
