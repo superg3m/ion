@@ -9,11 +9,11 @@
 // bit 30: STATEMENT
 // bit 31: DECLARATION
 
-#define ION_LEAF_NODE_BIT ((unsigned int)(1 << 27))
-#define ION_DEFERRABLE_BIT ((unsigned int)(1 << 28))
-#define ION_EXPRESSION_BIT ((unsigned int)(1 << 29))
-#define ION_STATEMENT_BIT ((unsigned int)(1 << 30))
-#define ION_DECLARATION_BIT ((unsigned int)(1 << 31))
+#define ION_LEAF_NODE_BIT (1u << 27)
+#define ION_DEFERRABLE_BIT (1u << 28)
+#define ION_EXPRESSION_BIT (1u << 29)
+#define ION_STATEMENT_BIT (1u << 30)
+#define ION_DECLARATION_BIT (1u << 31)
 
 typedef enum NodeKind {
     ION_NK_UNARY_EXPR = ION_EXPRESSION_BIT,
@@ -48,8 +48,8 @@ typedef struct IonNode {
     IonNodeKind kind;
     IonToken token; // return, binary: operator, int, float, string, bool, identifer
     u32 desc_count;
+    // type?
     union {
-        // if leaf
         int i;
         float f;
         bool b;

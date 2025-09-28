@@ -18,12 +18,11 @@
     X(ION_TS_SEMI_COLON, ";")        \
     X(ION_TS_RIGHT_ARROW, "->")      \
                                      \
-    X(ION_TSA_EQUALS, "=")           \
-    X(ION_TSA_INFER_EQUALS, ":=")    \
-    X(ION_TSA_PLUS_EQUALS, "+=")     \
-    X(ION_TSA_MINUS_EQUALS, "-=")    \
-    X(ION_TSA_STAR_EQUALS, "*=")     \
-    X(ION_TSA_DIVISION_EQUALS, "/=") \
+    X(ION_TS_EQUALS, "=")           \
+    X(ION_TS_PLUS_EQUALS, "+=")     \
+    X(ION_TS_MINUS_EQUALS, "-=")    \
+    X(ION_TS_STAR_EQUALS, "*=")     \
+    X(ION_TS_DIVISION_EQUALS, "/=") \
                                      \
     X(ION_TS_LOGICAL_OR, "||")       \
     X(ION_TS_LOGICAL_AND, "&&")      \
