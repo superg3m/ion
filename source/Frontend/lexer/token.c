@@ -10,8 +10,8 @@ IonToken ionTokenCreate(IonTokenKind kind, CKG_StringView lexeme, int line) {
     return ret;
 }
 
-const char* ionTokenGetString(IonToken token) {
-    ckg_assert(token.kind >= 0 && token.kind < ION_TOKEN_COUNT);
+const char* ionTokenKindGetString(IonTokenKind kind) {
+    ckg_assert(kind >= 0 && kind < ION_TOKEN_COUNT);
 
     static char* token_strings[ION_TOKEN_COUNT] = {
         stringify(ION_TOKEN_ILLEGAL_TOKEN),
@@ -32,11 +32,11 @@ const char* ionTokenGetString(IonToken token) {
         stringify(ION_TOKEN_IDENTIFIER),
     };
 
-    return token_strings[token.kind];
+    return token_strings[kind];
 }
 
 void ionTokenPrint(IonToken token) {
-    CKG_LOG_PRINT("%s(%.*s) | line: %d\n", ionTokenGetString(token), (int)token.lexeme.length, token.lexeme.data, token.line);
+    CKG_LOG_PRINT("%s(%.*s) | line: %d\n", ionTokenKindGetString(token.kind), (int)token.lexeme.length, token.lexeme.data, token.line);
 }
 
 IonTokenKind ionTokenGetKeyword(CKG_StringView sv) {

@@ -1,9 +1,3 @@
-#include <Core/ckg.h>
-#include <Frontend/token.h>
+#include "../ast/ast.h"
 
-typedef struct Parser {
-    CKG_Vector(IonToken) tokens;
-    int current;
-} Parser;
-
-// IonAst ion_parse_program();
+CKG_Vector(IonNode) ionParseProgram(CKG_Vector(IonToken) tokens);

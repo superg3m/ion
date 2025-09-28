@@ -1,169 +1,65 @@
-#include <Core/ckg.h>
+#pragma once
 
-typedef enum IonAstNodeKind {
-    ION_NK_INT_LIT = 0,
-    ION_NK_FLOAT_LIT,
-    ION_NK_CHAR_LIT,
-    ION_NK_STRING_LIT,
+#include "../lexer/token.h"
 
-    ION_NK_ADD,
-    ION_NK_MUL,
+// |00000|000 00000000 00000000 00000000
+// bit 27: LEAF_NODE
+// bit 28: DEFERRABLE
+// bit 29: EPXRESSION
+// bit 30: STATEMENT
+// bit 31: DECLARATION
 
-    ION_NK_ENUM_COUNT
-} IonAstNodeKind;
-// static_assert(ION_NK_ENUM_COUNT < 256, "IonAstNodeKind must fit in u8");
+#define ION_LEAF_NODE_BIT ((unsigned int)(1 << 27))
+#define ION_DEFERRABLE_BIT ((unsigned int)(1 << 28))
+#define ION_EXPRESSION_BIT ((unsigned int)(1 << 29))
+#define ION_STATEMENT_BIT ((unsigned int)(1 << 30))
+#define ION_DECLARATION_BIT ((unsigned int)(1 << 31))
 
-static b32 ionAstNkIsLeaf(IonAstNodeKind nk) { return nk <= ION_NK_STRING_LIT; }
-static b32 ion_ast_nk_is_list(IonAstNodeKind nk) { return !ion_ast_nk_is_leaf(nk); }
+typedef enum NodeKind {
+    ION_NK_UNARY_EXPR = ION_EXPRESSION_BIT,
+    ION_NK_BINARY_EXPR,
+    ION_NK_GROUPING_EXPR,
 
-typedef struct IonAstNode {
-    IonAstNodeKind kind;
-    CKG_StringView source_view;
-    int line;
+    // LEAF NODES
+    ION_NK_INTEGER_EXPR = ION_LEAF_NODE_BIT|ION_EXPRESSION_BIT,
+    ION_NK_FLOAT_EXPR,
+    ION_NK_BOOLEAN_EXPR,
+    ION_NK_STRING_EXPR,
+    ION_NK_IDENTIFIER_EXPR,
+
+
+    ION_NK_ASSIGNMENT_STMT = ION_STATEMENT_BIT,
+    ION_NK_BLOCK_STMT,
+    ION_NK_PRINT_STMT = ION_DEFERRABLE_BIT|(ION_NK_BLOCK_STMT + 1),
+    ION_NK_PRINTLN_STMT,
+
+    ION_NK_POST_INCREMENT_SE = ION_EXPRESSION_BIT|ION_STATEMENT_BIT, // i++
+    ION_NK_PRE_INCREMENT_SE = ION_EXPRESSION_BIT|ION_STATEMENT_BIT,  // ++i
+    ION_NK_POST_DECREMENT_SE = ION_EXPRESSION_BIT|ION_STATEMENT_BIT, // i--
+    ION_NK_PRE_DECREMENT_SE = ION_EXPRESSION_BIT|ION_STATEMENT_BIT,  // --i
+    ION_NK_FUNC_CALL_SE = ION_DEFERRABLE_BIT|ION_EXPRESSION_BIT|ION_STATEMENT_BIT,
+
+
+    ION_NK_VAR_DECL = ION_DECLARATION_BIT,
+    ION_NK_FUNC_DECL,
+} IonNodeKind;
+
+typedef struct IonNode {
+    IonNodeKind kind;
+    IonToken token; // return, binary: operator, int, float, string, bool, identifer
     union {
-        struct { u32 descendant_count; };
-        i64 as_i64;
-        f64 as_f64;
-        u8 as_char;
-    };
+        u32 desc_count;
 
-#if ION_CC_DEBUG
-    char* debug_str;
-#endif
-} IonAstNode;
+        // if leaf
+        int i;
+        float f;
+        bool b;
+        CKG_StringView s;
+    } data;
+} IonNode;
 
-typedef struct IonAst {
-    IonAstNode* node_arr;
-    u32 node_len;
-    u32 node_cap;
-} IonAst;
- 
-typedef struct { u32 index; } IonAstNodeH;
-
-static IonAstNodeH ion_ast_push(IonAst* ast, IonAstNode node) {
-    IonAstNodeH h = { ast->node_len };
-    ckg_assert_msg(h.index < ast->node_cap, "ast boom");
-    ast->node_arr[h.index++] = node;
-    return h;
-}
-
-static IonAstNode* ion_ast_get(IonAst* ast, IonAstNodeH nodeH) {
-    IonAstNode* node = &ast->node_arr[nodeH.index];
-    return node;
-}
-
-/*
-
-// Expression
-//  └── Logical (||, &&)
-//       └── Comparison (==, !=, <, >, etc.) 4
-//            └── Additive (+, -, |, ^) 3
-//                 └── Multiplicative (*, /, %, <<, >>) 2
-//                      └── Unary (+, -, !, ~, &, *) 1
-//                           └── Primary (literals, identifiers, etc.) 0
-
-primary() {
-    value = ...
-    return ast_push(INT_LIT, value);
-}
-
-unary() {
-    Node* neg = ast_push(NEG, n_desc=1)
-    pri = primary()
-    neg.n_desc += IsLeaf(pri) ? 1 : pri.n_desc;
-}
-
-// <logical>    ::= <comparison> (("||" | "&&") <comparison>)*
-static IonAstNodeIndex parse_logical_expression(Parser* parser) {
-    initial_len = ast.n_len;
-    logical_or = push/reserve();
-    
-    IonAstNodeIndex expression = parse_comparison_expression(parser);
-    while (parser_consume_on_match(parser, ION_TOKEN_OR) || parser_consume_on_match(parser, ION_TOKEN_AND)) {
-        IonToken op = parser_previous_token(parser);
-        IonAstNodeIndex right = parse_comparison_expression(parser);
-
-        expression = logical_expression_create(op, expression, right, op.line);
-        return ast_push(INT_LIT, value);
-        push_ast()
-    }
-
-    logical_or.n_desc = ast.n_len - initial_len;
-    return expression;
-}
-
-// <expression> ::= <logical_expr>
-
-
-static Expression* parse_expression(Parser* parser);
-// <primary> ::= INTEGER | FLOAT | TRUE | FALSE | STRING | PRIMITIVE_TYPE | IDENTIFIER | "(" <expression> ")"
-static Expression* parse_primary_expression(Parser* parser) {
-    if (parser_consume_on_match(parser, ION_TOKEN_INTEGER_LITERAL)) {
-        IonToken tok = parser_previous_token(parser);
-        push_ast()
-        return integer_expression_create(parser->tok.i, tok.line);
-    }
-}
-
-static IonAstNodeIndex parse_binary_expression(Parser* parser) {
-    IonAstNodeIndex binary_opH = ast_reserve_node(&p->ast);
-
-    // Add<#> Int<1> Int<2> Update<#>
-    // Int<1> Int<2> Add<#>
-
-    // BegiBinOp/Add()
-        // Primary/1()
-        // Primary/2()
-    // EndBinOp()
-
-    BinOp
-        ->Int<1>
-        ->Int<2>
-
-    
-    BinOP
-    int<1>, 
-        
-    BinOp Int<1> Int<2>
-
-    +1 + 2
-
-    1 + 2
-
-    -> AstNode[] in postfix
-    2nd-pass -> traverse and produce prefix, push in the AST (desired AST layout)
-
-        IntLit<1>
-        IntLit<2>
-        AddOp<#>
-
-        a = 1
-        VarDef a 1
-        a 1 VarDef
-    
-
-
-
-
-    Expression* expression = parse_primary_expression(parser);
-    while (parser_consume_on_match(parser, ION_TOKEN_PLUS)) {
-        IonToken op = parser_previous_token(parser);
-        Expression* right = parse_primary_expression(parser);
-
-        expression = binary_expression_create(op, expression, right, op.line);
-    } 
-
-    return expression;
-}
-
-Expression: 1
-// + 2 + 3
-static IonAstNodeIndex parse_expression(Parser* parser) {
-    return parse_binary_expression(parser);
-}
-
-// Expression
-// └── Binary (+)
-//     └── Primary (literals, identifiers, grouping)
-
-*/
+IonNode ionNodeCreate(IonNodeKind kind, IonToken token);
+bool ionNodeIsLeaf(IonNode node);
+bool ionNodeIsDeclaration(IonNode node);
+bool ionNodeIsStatement(IonNode node);
+bool ionNodeIsExpression(IonNode node);

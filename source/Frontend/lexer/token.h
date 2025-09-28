@@ -25,15 +25,15 @@
     X(ION_TSA_STAR_EQUALS, "*=")     \
     X(ION_TSA_DIVISION_EQUALS, "/=") \
                                      \
-    X(ION_TSL_OR, "||")              \
-    X(ION_TSL_AND, "&&")             \
+    X(ION_TS_OR, "||")              \
+    X(ION_TS_AND, "&&")             \
                                      \
-    X(ION_TSC_EQUAL, "==")           \
-    X(ION_TSC_NOT_EQUAL, "!=")       \
-    X(ION_TSC_GT, ">")               \
-    X(ION_TSC_GT_OR_EQUAL, ">=")     \
-    X(ION_TSC_LT_OR_EQUAL, "<=")     \
-    X(ION_TSC_EQUALS_EQUALS, "==")   \
+    X(ION_TS_EQUAL, "==")           \
+    X(ION_TS_NOT_EQUAL, "!=")       \
+    X(ION_TS_GT, ">")               \
+    X(ION_TS_GT_OR_EQUAL, ">=")     \
+    X(ION_TS_LT_OR_EQUAL, "<=")     \
+    X(ION_TS_EQUALS_EQUALS, "==")   \
 
 #define X_LITERAL_TOKENS \
     X(ION_TL_INTEGER)    \
@@ -88,7 +88,7 @@ typedef struct IonToken {
 
 IonToken ionTokenCreate(IonTokenKind kind, CKG_StringView lexeme, int line);
 
-const char* ionTokenGetString(IonToken token);
+const char* ionTokenKindGetString(IonTokenKind kind);
 void ionTokenPrint(IonToken token);
 IonTokenKind ionTokenGetKeyword(CKG_StringView lexeme);
 IonTokenKind ionTokenGetSyntax(CKG_StringView lexeme);

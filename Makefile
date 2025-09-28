@@ -20,7 +20,7 @@ OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
 OBJS := $(patsubst $(CORE_DIR)/%.c,$(OBJ_DIR)/Core/%.o,$(OBJS))
 OBJS := $(patsubst $(FRONTEND_DIR)/%/%.c,$(OBJ_DIR)/Frontend/%/%.o,$(OBJS))
 
-TARGET := ion
+TARGET := ion.exe
 
 all: $(TARGET)
 

@@ -1,5 +1,6 @@
 #include <frontend/lexer/token.h>
 #include <frontend/lexer/lexer.h>
+#include <frontend/parser/parser.h>
 
 #define CKG_IMPL
 #define CKG_OS_INCLUDE
@@ -22,6 +23,8 @@ int main() {
 		IonToken token = token_stream[i];
 		ionTokenPrint(token);
 	}
+
+	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
 
 	return 0;
 }
