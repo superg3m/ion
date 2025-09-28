@@ -73,23 +73,28 @@ IonNode* ionInterpretNodes(IonNode* node, Scope* scope) {
     return node;
 }
 
-void ionInterpretExpression(IonNode* expr, Scope* scope) {
+IonNode ionInterpretExpression(IonNode* expr, Scope* scope) {
     switch (expr->kind) {
-        case ION_NK_VAR_DECL: {
-
+        case ION_NK_INTEGER_EXPR:
+        case ION_NK_BOOLEAN_EXPR:
+        case ION_NK_FLOAT_EXPR:
+        case ION_NK_STRING_EXPR: {
+            return *expr;
         } break;
 
-        case ION_NK_FUNC_DECL: {
-            
+        case ION_NK_IDENTIFIER_EXPR: {
+            return ionScopeGet(scope, expr->token.lexeme);
         } break;
         
         default: {
             ckg_assert(false);
         } break;
     }
+
+    return (IonNode){};
 }
 
-void printExpression(IonNode* expr, Scope* scope) {
+void ionPrintExpression(IonNode* expr, Scope* scope) {
     ckg_assert(ionNodeIsExpression(expr));
 
     switch (expr->kind) {
@@ -110,6 +115,11 @@ void printExpression(IonNode* expr, Scope* scope) {
             // CKG_LOG_PRINT("%.*s", expr->data.s);
         } break;
 
+        case ION_NK_IDENTIFIER_EXPR: {
+            IonNode e = ionInterpretExpression(expr, scope);
+            ionPrintExpression(&e, scope);
+        } break;
+
         default: {
             ckg_assert(false);
         } break;
@@ -119,7 +129,22 @@ void printExpression(IonNode* expr, Scope* scope) {
 IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
     switch (stmt->kind) {
         case ION_NK_ASSIGNMENT_STMT: {
+            ckg_assert_msg(
+                ionScopeHas(scope, stmt->token.lexeme), 
+                "Line: %d | Undeclared Identifier %.*s", 
+                stmt->token.line,
+                stmt->token.lexeme.length, stmt->token.lexeme.data
+            );
 
+            IonNode rhs = ionInterpretExpression(ionNodeGetRHS(stmt), scope);
+            ckg_assert_msg(
+                (rhs.type.mask & ION_TYPE_VOID) == 0,
+                "Line %d | Attempting to assign void to variable: %.*s", 
+                stmt->token.line,
+                stmt->token.lexeme.length, stmt->token.lexeme.data
+            );
+
+            ionScopeSet(scope, stmt->token.lexeme, rhs);
         } break;
 
         case ION_NK_FUNC_CALL_SE: {
@@ -146,22 +171,23 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
         } break;
 
         case ION_NK_PRINT_STMT: {
-            printExpression(ionNodeGetExpr(stmt), scope);
+            ionPrintExpression(ionNodeGetExpr(stmt), scope);
             CKG_LOG_PRINT("\n");
-
-            return stmt + 1 + stmt->desc_count;
         } break;
         
         default: {
             ckg_assert(false);
         } break;
     }
+
+    return stmt + 1 + stmt->desc_count;
 }
 
 IonNode* ionInterpretDeclaration(IonNode* decl, Scope* scope) {
     switch (decl->kind) {
         case ION_NK_VAR_DECL: {
-
+            IonNode* RHS = decl + 1;
+            ionScopeSet(scope, decl->token.lexeme, *RHS);
         } break;
 
         case ION_NK_FUNC_DECL: {
@@ -203,12 +229,4 @@ void ionInterpretProgram(CKG_Vector(IonNode) ast) {
     } else {
         ckg_assert_msg(false, "main function not found\n");
     }
-
-    /*
-	if mainDecl, ok := globalFunctions["main"]; ok {
-
-	} else {
-		panic()
-	}
-    */
 }

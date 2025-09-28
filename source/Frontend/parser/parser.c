@@ -25,6 +25,7 @@ void ionParserReportError(IonParser* parser, const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
+
     CKG_LOG_ERROR("String: %s\n", ionTokenKindGetString(token.kind));
     CKG_LOG_ERROR("Error Line: %d | %s\n", token.line, ckg_str_va_sprint(NULLPTR, fmt, args));
     va_end(args);
@@ -147,6 +148,11 @@ Type ionParseType(IonParser* parser) {
             ast[start].desc_count = index - (start + 1);
 
             return index;
+        } else if (ionParserConsumeOnMatch(parser, ION_TOKEN_IDENTIFIER)) {
+            IonNode node = ionNodeCreate(ION_NK_IDENTIFIER_EXPR, current);
+            ast[index] = node;
+
+            return index + 1;
         }
 
         return -1;
@@ -275,6 +281,23 @@ Type ionParseType(IonParser* parser) {
     int ionParseDeclaration(IonParser* parser, IonNode* ast, int index);
     int ionParseStatement(IonParser* parser, IonNode* ast, int index);
 
+    int ionParseAssignmentStatement(IonParser* parser, IonNode* ast, int index) {
+        int start = index;
+
+        IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+        IonNode node = ionNodeCreate(ION_NK_ASSIGNMENT_STMT, ident);
+        ast[start] = node;
+
+        ionParserExpect(parser, ION_TS_EQUALS);
+
+        index = ionParseExpression(parser, ast, index + 1);
+        ast[start].desc_count = index - (start + 1);
+
+        ionParserExpect(parser, ION_TS_SEMI_COLON);
+
+        return index;
+    }
+
     int ionParseStatementBlock(IonParser* parser, IonNode* ast, int index) {
         int start = index;
 
@@ -339,7 +362,7 @@ Type ionParseType(IonParser* parser) {
                 return index;
             }
 
-            // return ionParseAssignmentStatement(parser, ast, index);
+            return ionParseAssignmentStatement(parser, ast, index);
         }
     
         return -1;

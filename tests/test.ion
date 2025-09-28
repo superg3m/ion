@@ -1,7 +1,8 @@
-var x: int = 5;
+var x: int = 8;
 
 fn main() -> void {
-    println(5);
+    x = 4;
 
+    println(x);
     println(64.3);
 }

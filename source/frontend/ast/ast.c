@@ -36,6 +36,19 @@ IonNode* ionNodeGetExpr(IonNode* node) {
     return node + 1;
 }
 
+IonNode* ionNodeGetLHS(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT);
+
+    return node + 1;
+}
+
+IonNode* ionNodeGetRHS(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT);
+    IonNode* lhs = ionNodeGetLHS(node);
+
+    return node + 1 + lhs->desc_count;
+}
+
 IonNode* ionNodeGetOperand(IonNode* node) {
     ckg_assert(node->kind == ION_NK_UNARY_EXPR);
 
