@@ -299,21 +299,20 @@ Type ionParseType(IonParser* parser) {
 
         ionParserExpect(parser, ION_TS_LEFT_PAREN);
         while (ionParserConsumeOnMatch(parser, ION_TS_RIGHT_PAREN)) {
-            IonToken param = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+            IonToken token = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
             ionParserExpect(parser, ION_TS_COLON);
-            Type type = ionParseType(parser);
+            Parameter param = {0};
+            param.token = token;
+            param.type = ionParseType(parser);
 
-            args = append(args, TS.Parameter{
-                Tok:      param,
-                DeclType: dataType,
-            })
+            ckg_vector_push(params, param);
 
-            if parser.peekNthToken(0).Kind != Token.RIGHT_PAREN {
-                parser.expect(Token.COMMA)
+            if (ionParserPeekNthToken(parser, 0).kind != ION_TS_RIGHT_PAREN) {
+                ionParserExpect(parser, ION_TS_RIGHT_PAREN);
             }
         }
 
-        return args
+        return params;
     }
 
     int ionParseFuncDecl(IonParser* parser, IonNode* ast, int index) {
@@ -321,10 +320,10 @@ Type ionParseType(IonParser* parser) {
 
         ionParserExpect(parser, ION_TKW_FN);
         IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
-        params := parser.parseParameters()
-        parser.expect(Token.RIGHT_ARROW)
+        CKG_Vector(Parameter) params = ionParseParameters(parser);
+        ionParserExpect(parser, ION_TS_RIGHT_ARROW);
         Type return_type = ionParseType(parser);
-        block := parser.parseStatementBlock().(*AST.StatementBlock)
+        index = ionParseStatementBlock(parser, ast, index);
 
         declType := TS.NewType(TS.FUNCTION, returnType, params)
 

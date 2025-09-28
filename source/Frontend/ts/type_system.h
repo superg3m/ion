@@ -37,10 +37,24 @@ enum {
 
 typedef struct Parameter Parameter;
 
+// Im not sure if this can represent types like
+// func() -> func(int) -> array -> array -> int
+
+/*
+fn test() -> (fn(int) -> [][]int) {
+    return fn() -> [][]int {
+        return [][].int[[1, 2, 3], [4, 5]]
+    }
+}
+*/
+
+
 typedef struct Type {
     InfoMask mask;
     u8 array_depth;  // 0 for non-array types
     CKG_Vector(Parameter) parameters; // if you are function type
+
+    // struct Type* next;
 } Type;
 
 typedef struct Parameter  {
@@ -49,6 +63,57 @@ typedef struct Parameter  {
 } Parameter;
 
 Type ionTypeUnresolved();
+Type ionTypeVoid() {
+    Type ret = {0};
+    ret.mask = ION_TYPE_VOID;
+    ret.array_depth = 0;
+
+    return ret;
+}
+
+Type ionTypeInt() {
+    Type ret = {0};
+    ret.mask = (InfoMask)(ION_TYPE_INT|ION_TYPE_FULLY_COMPARABLE|ION_TYPE_OP_ALL);
+    ret.array_depth = 0;
+
+    return ret;
+}
+
+Type ionTypeFloat() {
+    Type ret = {0};
+    ret.mask = (InfoMask)(ION_TYPE_FLOAT|ION_TYPE_FULLY_COMPARABLE|ION_TYPE_OP_ALL);
+    ret.array_depth = 0;
+    
+    return ret;
+}
+
+Type ionTypeBool() {
+    Type ret = {0};
+    ret.mask = (InfoMask)(ION_TYPE_BOOL|ION_TYPE_COMPARE_EQUALITY);
+    ret.array_depth = 0;
+    
+    return ret;
+}
+
+Type ionTypeString() {
+    Type ret = {0};
+    ret.mask = (InfoMask)(ION_TYPE_STRING|ION_TYPE_COMPARE_EQUALITY|ION_TYPE_OP_ADD);
+    ret.array_depth = 0;
+    return ret;
+}
+
+Type ionTypeFunc(CKG_Vector(Parameter) parameters) {
+    Type ret = {0};
+    ret.mask = (InfoMask)(ION_TYPE_FUNC|ION_TYPE_INFO_CALLABLE);
+    ret.array_depth = 0;
+    ret.parameters = parameters;
+
+    return ret;
+}
+
+
+
+
 Type ionTypeCreate(CKG_StringView sv);
 Type ionTypePromote(IonToken op, Type a, Type b);
 bool TypeCompare(Type c1, Type c2);
