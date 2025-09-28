@@ -27,9 +27,8 @@ int main() {
 	}
 
 	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
-	ckg_assert(ast[0].type.mask & ION_TYPE_INT);
-	ckg_assert(ast[0].type.mask & ION_TYPE_FULLY_COMPARABLE);
-	ckg_assert(ast[0].type.mask & ION_TYPE_OP_ALL);
+	ckg_assert(ast[0].type.mask & ION_TYPE_FUNC);
+	ckg_assert(ionGetReturnType(ast[0].type).mask & ION_TYPE_VOID);
 	// ckg_assert(ionNodeIsExpression(ast + 1));
 	//IonNode* left = ionNodeGetLeft(ast, 0);
 	//ckg_assert(ionNodeIsLeaf(left));

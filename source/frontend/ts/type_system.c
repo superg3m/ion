@@ -47,13 +47,22 @@ Type ionTypeString() {
     return ret;
 }
 
-Type ionTypeFunc(CKG_Vector(Parameter) parameters) {
+Type ionTypeFunc(CKG_Vector(Parameter) parameters, Type return_type) {
     Type ret = {0};
-    ret.mask = (InfoMask)(ION_TYPE_FUNC|ION_TYPE_INFO_CALLABLE);
+    ret.mask = return_type.mask | (InfoMask)(ION_TYPE_FUNC);
     ret.array_depth = 0;
     ret.parameters = parameters;
 
     return ret;
+}
+
+Type ionGetReturnType(Type t) {
+    ckg_assert(t.mask & ION_TYPE_FUNC);
+
+    t.mask &= ~ION_TYPE_FUNC;
+    t.parameters = NULLPTR;
+
+    return t;
 }
 
 Type ionTypeCreate(CKG_StringView sv) {

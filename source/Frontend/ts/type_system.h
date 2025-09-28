@@ -32,7 +32,6 @@ enum {
     ION_TYPE_OP_ALL = ION_TYPE_OP_ADD|ION_TYPE_OP_SUB|ION_TYPE_OP_MUL|ION_TYPE_OP_DIV|ION_TYPE_OP_MOD,
 
     ION_TYPE_INFO_INDEXABLE = (1u << 29),
-    ION_TYPE_INFO_CALLABLE  = (1u << 30),
 };
 
 typedef struct Parameter Parameter;
@@ -48,7 +47,6 @@ fn test() -> (fn(int) -> [][]int) {
 }
 */
 
-
 typedef struct Type {
     InfoMask mask;
     u8 array_depth;  // 0 for non-array types
@@ -63,57 +61,9 @@ typedef struct Parameter  {
 } Parameter;
 
 Type ionTypeUnresolved();
-Type ionTypeVoid() {
-    Type ret = {0};
-    ret.mask = ION_TYPE_VOID;
-    ret.array_depth = 0;
+Type ionTypeFunc(CKG_Vector(Parameter) parameters, Type return_type);
 
-    return ret;
-}
-
-Type ionTypeInt() {
-    Type ret = {0};
-    ret.mask = (InfoMask)(ION_TYPE_INT|ION_TYPE_FULLY_COMPARABLE|ION_TYPE_OP_ALL);
-    ret.array_depth = 0;
-
-    return ret;
-}
-
-Type ionTypeFloat() {
-    Type ret = {0};
-    ret.mask = (InfoMask)(ION_TYPE_FLOAT|ION_TYPE_FULLY_COMPARABLE|ION_TYPE_OP_ALL);
-    ret.array_depth = 0;
-    
-    return ret;
-}
-
-Type ionTypeBool() {
-    Type ret = {0};
-    ret.mask = (InfoMask)(ION_TYPE_BOOL|ION_TYPE_COMPARE_EQUALITY);
-    ret.array_depth = 0;
-    
-    return ret;
-}
-
-Type ionTypeString() {
-    Type ret = {0};
-    ret.mask = (InfoMask)(ION_TYPE_STRING|ION_TYPE_COMPARE_EQUALITY|ION_TYPE_OP_ADD);
-    ret.array_depth = 0;
-    return ret;
-}
-
-Type ionTypeFunc(CKG_Vector(Parameter) parameters) {
-    Type ret = {0};
-    ret.mask = (InfoMask)(ION_TYPE_FUNC|ION_TYPE_INFO_CALLABLE);
-    ret.array_depth = 0;
-    ret.parameters = parameters;
-
-    return ret;
-}
-
-
-
-
+Type ionGetReturnType(Type t);
 Type ionTypeCreate(CKG_StringView sv);
 Type ionTypePromote(IonToken op, Type a, Type b);
 bool TypeCompare(Type c1, Type c2);
