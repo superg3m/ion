@@ -27,29 +27,30 @@ bool ionNodeIsDeclaration(IonNode* node) {
     return node->kind & ION_DECLARATION_BIT;
 }
 
-IonNode* ionNodeGetExpr(CKG_Vector(IonNode) ast, int index) {
-    ckg_assert(ast[index].kind == ION_NK_GROUPING_EXPR);
+IonNode* ionNodeGetExpr(IonNode* node) {
+    ckg_assert(
+        node->kind == ION_NK_GROUPING_EXPR ||
+        node->kind == ION_NK_PRINT_STMT
+    );
 
-    return &ast[index + 1];
+    return node + 1;
 }
 
-IonNode* ionNodeGetOperand(CKG_Vector(IonNode) ast, int index) {
-    ckg_assert(ast[index].kind == ION_NK_UNARY_EXPR);
+IonNode* ionNodeGetOperand(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_UNARY_EXPR);
 
-    return &ast[index + 1];
+    return node + 1;
 }
 
-IonNode* ionNodeGetLeft(CKG_Vector(IonNode) ast, int index) {
-    ckg_assert(ast[index].kind == ION_NK_BINARY_EXPR);
+IonNode* ionNodeGetLeft(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_BINARY_EXPR);
 
-    return &ast[index + 1];
+    return node + 1;
 }
 
-// Not yet correct?
-IonNode* ionNodeGetRight(CKG_Vector(IonNode) ast, int index) {
-    ckg_assert(ast[index].kind == ION_NK_BINARY_EXPR);
+IonNode* ionNodeGetRight(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_BINARY_EXPR);
+    IonNode* left = ionNodeGetLeft(node);
 
-    IonNode* left = ionNodeGetLeft(ast, index);
-
-    return &ast[index + 1 + left->desc_count];
+    return node + 1 + left->desc_count;
 }

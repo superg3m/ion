@@ -1,6 +1,7 @@
 #include "frontend/lexer/token.h"
 #include "frontend/lexer/lexer.h"
 #include "frontend/parser/parser.h"
+#include "frontend/interpreter/interpreter.h"
 
 #include "frontend/ts/type_system.h"
 
@@ -27,14 +28,8 @@ int main() {
 	}
 
 	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
-	ckg_assert(ast[0].type.mask & ION_TYPE_FUNC);
-	ckg_assert(ionGetReturnType(ast[0].type).mask & ION_TYPE_VOID);
-	// ckg_assert(ionNodeIsExpression(ast + 1));
-	//IonNode* left = ionNodeGetLeft(ast, 0);
-	//ckg_assert(ionNodeIsLeaf(left));
-	//IonNode* right = ionNodeGetRight(ast, 0);
 
-	(void)ast;
+	ionInterpretProgram(ast);
 
 	return 0;
 }

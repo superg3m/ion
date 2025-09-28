@@ -1,3 +1,5 @@
+var x: int = 5;
+
 fn main() -> void {
-    var x: int = 4 + 3;
+    println(5);
 }

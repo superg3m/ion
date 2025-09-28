@@ -86,6 +86,24 @@ Type ionParseType(IonParser* parser) {
     int ionParseLogicalExpression(IonParser* parser, IonNode* ast, int index);
     int ionParseExpression(IonParser* parser, IonNode* ast, int index);
 
+
+    CKG_Vector(IonNode*) ionParseArguments(IonParser* parser, IonNode* ast, int index) {
+        CKG_Vector(IonNode*) arguments = NULLPTR;
+
+        ionParserExpect(parser, ION_TS_LEFT_PAREN);
+        while (!ionParserConsumeOnMatch(parser, ION_TS_RIGHT_PAREN)) {
+            ckg_vector_push(arguments, &ast[index]);
+            index = ionParseExpression(parser, ast, index);
+
+            if (ionParserPeekNthToken(parser, 0).kind != ION_TS_RIGHT_PAREN) {
+                ionParserExpect(parser, ION_TS_COMMA);
+            }
+        }
+
+        return arguments;
+    }
+
+
     // PARSING
     // <Primary>    ::= <integer> | <float> | <boolean> | <string> | '(' <Expression> ')'
     int ionParsePrimaryExpression(IonParser* parser, IonNode* ast, int index) {
@@ -284,14 +302,43 @@ Type ionParseType(IonParser* parser) {
 
     int ionParseStatement(IonParser* parser, IonNode* ast, int index) {
         IonToken current = ionParserPeekNthToken(parser, 0);
-
         if (current.kind == ION_TS_LEFT_CURLY) {
 		    return ionParseStatementBlock(parser, ast, index);
+        } else if (current.kind == ION_TKW_PRINT || current.kind == ION_TKW_PRINTLN) {
+            int start = index;
+            ionParserExpect(parser, current.kind);
+            ionParserExpect(parser, ION_TS_LEFT_PAREN);
+
+            IonNode node = ionNodeCreate(ION_NK_PRINT_STMT, current);
+            node.data.new_line = current.kind == ION_TKW_PRINTLN;
+            ast[start] = node;
+
+            index = ionParseExpression(parser, ast, index + 1);
+            ast[start].desc_count = index - (start + 1);
+            ionParserExpect(parser, ION_TS_RIGHT_PAREN);
+            ionParserExpect(parser, ION_TS_SEMI_COLON);
+
+		    return index;
         } else if (current.kind == ION_TOKEN_IDENTIFIER) {
+            int start = index;
+
+            IonToken next = ionParserPeekNthToken(parser, 1);
+            if (next.kind == ION_TS_LEFT_PAREN) {
+                IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+
+                IonNode node = ionNodeCreate(ION_NK_FUNC_CALL_SE, ident);
+                ast[start] = node;
+                ast[start].data.arguments = ionParseArguments(parser, ast, index + 1);
+                ast[start].desc_count = index - (start + 1);
+
+                ionParserExpect(parser, ION_TS_SEMI_COLON);
+
+                return index;
+            }
+
             // return ionParseAssignmentStatement(parser, ast, index);
         }
     
-        ckg_assert(false);
         return -1;
     }
 #endif
@@ -370,7 +417,6 @@ Type ionParseType(IonParser* parser) {
             return ionParseFuncDecl(parser, ast, index);
         }
     
-        ckg_assert(false);
         return -1;
     }
 #endif
