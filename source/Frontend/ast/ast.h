@@ -58,10 +58,10 @@ typedef struct IonNode {
 } IonNode;
 
 IonNode ionNodeCreate(IonNodeKind kind, IonToken token);
-bool ionNodeIsLeaf(IonNode node);
-bool ionNodeIsDeclaration(IonNode node);
-bool ionNodeIsStatement(IonNode node);
-bool ionNodeIsExpression(IonNode node);
+bool ionNodeIsLeaf(IonNode* node);
+bool ionNodeIsDeclaration(IonNode* node);
+bool ionNodeIsStatement(IonNode* node);
+bool ionNodeIsExpression(IonNode* node);
 
 IonNode* ionNodeGetOperand(CKG_Vector(IonNode) ast, int index);
 IonNode* ionNodeGetLeft(CKG_Vector(IonNode) ast, int index);

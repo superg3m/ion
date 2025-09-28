@@ -10,20 +10,20 @@ IonNode ionNodeCreate(IonNodeKind kind, IonToken token) {
     return ret;
 }
 
-bool ionNodeIsLeaf(IonNode node) {
-    return node.kind & ION_DECLARATION_BIT;
+bool ionNodeIsLeaf(IonNode* node) {
+    return node->kind & ION_LEAF_NODE_BIT;
 }
 
-bool ionNodeIsDeclaration(IonNode node) {
-    return node.kind & ION_DECLARATION_BIT;
+bool ionNodeIsDeclaration(IonNode* node) {
+    return node->kind & ION_DECLARATION_BIT;
 }
 
-bool ionNodeIsStatement(IonNode node) {
-    return node.kind & ION_STATEMENT_BIT;
+bool ionNodeIsStatement(IonNode* node) {
+    return node->kind & ION_STATEMENT_BIT;
 }
 
-bool ionNodeIsExpression(IonNode node) {
-    return node.kind & ION_EXPRESSION_BIT;
+bool ionNodeIsExpression(IonNode* node) {
+    return node->kind & ION_EXPRESSION_BIT;
 }
 
 IonNode* ionNodeGetExpr(CKG_Vector(IonNode) ast, int index) {
