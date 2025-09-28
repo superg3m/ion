@@ -18,7 +18,7 @@
 typedef enum NodeKind {
     ION_NK_UNARY_EXPR = ION_EXPRESSION_BIT,
     ION_NK_BINARY_EXPR,
-    ION_NK_GROUPING,
+    ION_NK_GROUPING_EXPR,
 
     // LEAF NODES
     ION_NK_INTEGER_EXPR = ION_LEAF_NODE_BIT|ION_EXPRESSION_BIT,
@@ -81,4 +81,81 @@ bool ionNodeIsStatement(IonNode node) {
 
 bool ionNodeIsExpression(IonNode node) {
     return node.kind & ION_EXPRESSION_BIT;
+}
+
+// PARSING
+
+// <Primary>    ::= <integer> | <float> | <boolean> | <string> | '(' <Expression> ')'
+int ionParsePrimaryExpression(IonParser* parser, IonNode* ast, int index) {
+    int start = index;
+    IonToken current = ionParserPeekNthToken(parser, 0);
+
+    if (ionParserConsumeOnMatch(parser, Token.INTEGER_LITERAL)) {
+        IonNode node = ionNodeCreate(ION_NK_INTEGER_EXPR, current);
+        node.data.i = atoi(current.lexeme);
+        ast[index] = node;
+        return index + 1;
+    } else if (ionParserConsumeOnMatch(parser, Token.BOOLEAN_LITERAL)) {
+        IonNode node = ionNodeCreate(ION_NK_BOOLEAN_EXPR, current);
+        node.data.b = ckg_str_equal(current.lexeme.data, current.lexeme.length,
+                                    "true", sizeof("true") - 1);
+        ast[index] = node;
+        return index + 1;
+    } else if (ionParserConsumeOnMatch(parser, Token.FLOAT_LITERAL)) {
+        IonNode node = ionNodeCreate(ION_NK_FLOAT_EXPR, current);
+        node.data.f = atof(current.lexeme);
+        ast[index] = node;
+        return index + 1;
+    } else if (ionParserConsumeOnMatch(parser, Token.STRING_LITERAL)) {
+        IonNode node = ionNodeCreate(ION_NK_STRING_EXPR, current);
+        node.data.s = current.lexeme;
+        ast[index] = node;
+        return index + 1;
+    } else if (ionParserConsumeOnMatch(parser, Token.LEFT_PAREN)) {
+        IonNode node = ionNodeCreate(ION_NK_GROUPING_EXPR, current);
+        ast[index] = node;
+
+        index = ionParseExpression(parser, ast, index); // parse inside parens
+        ionParserExpect(parser, Token.RIGHT_PAREN);
+
+        ast[index].data.desc_count = index - start;
+
+        /*
+        memmove(&ast[start + 1], &ast[start], desc_count * sizeof(IonNode));
+        */
+
+        return start + 1 + ast[index].data.desc_count;
+    }
+
+    return -1;
+}
+
+// 3 + 6 * 2
+
+// [bin(+), 3, bin(*), 6, 4]
+
+// <additive> ::= <Factor> (('+'|'-') <Factor>)*
+int ionParseAdditiveExpression(Parser* parser, Node* ast, int index) {
+    int start = index; // index where this additive expression begins
+    index = ionParseMultiplicativeExpression(parser, ast, index); // parse left operand
+
+    while (parser.consumeOnMatch(Token.PLUS) || parser.consumeOnMatch(Token.MINUS)) {
+        IonToken op = parser.previousToken();
+
+        index = ionParseMultiplicativeExpression(parser, ast, index);
+
+        IonNode node = ionNodeCreate(ION_NK_BINARY_EXPR, op);
+        node.data.desc_count = index - start;
+
+        memmove(&ast[left_start + 1], &ast[start], (node.data.desc_count - 1) * sizeof(IonNode));
+        ast[start] = node;
+
+        index = start + node.data.desc_count;
+    }
+
+    return index;
+}
+
+int ionParseExpression(Parser* parser, Node* ast, int index) {
+    return ionParsePrimaryExpression(parser, ast, index);
 }
