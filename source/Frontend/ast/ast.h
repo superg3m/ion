@@ -47,9 +47,8 @@ typedef enum NodeKind {
 typedef struct IonNode {
     IonNodeKind kind;
     IonToken token; // return, binary: operator, int, float, string, bool, identifer
+    u32 desc_count;
     union {
-        u32 desc_count;
-
         // if leaf
         int i;
         float f;
@@ -63,3 +62,7 @@ bool ionNodeIsLeaf(IonNode node);
 bool ionNodeIsDeclaration(IonNode node);
 bool ionNodeIsStatement(IonNode node);
 bool ionNodeIsExpression(IonNode node);
+
+IonNode* ionNodeGetOperand(CKG_Vector(IonNode) ast, int index);
+IonNode* ionNodeGetLeft(CKG_Vector(IonNode) ast, int index);
+IonNode* ionNodeGetRight(CKG_Vector(IonNode) ast, int index);

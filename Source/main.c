@@ -25,6 +25,8 @@ int main() {
 	}
 
 	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
+	IonNode* left = ionNodeGetLeft(ast, 0);
+	IonNode* right = ionNodeGetRight(ast, 0);
 
 	return 0;
 }

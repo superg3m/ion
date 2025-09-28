@@ -97,7 +97,7 @@ int ionParsePrimaryExpression(IonParser* parser, IonNode* ast, int index) {
 
         index = ionParseExpression(parser, ast, index + 1); // parse inside parens
         ionParserExpect(parser, ION_TS_RIGHT_PAREN);
-        ast[start].data.desc_count = index - (start + 1);
+        ast[start].desc_count = index - (start + 1);
 
         return index;
     }
@@ -117,7 +117,7 @@ int ionParseUnaryExpression(IonParser* parser, IonNode* ast, int index) {
         ast[start] = node;
 
         index = ionParseUnaryExpression(parser, ast, index + 1);
-        ast[start].data.desc_count = index - (start + 1);
+        ast[start].desc_count = index - (start + 1);
 
         return index;
     }
@@ -140,12 +140,12 @@ int ionParseMultiplicativeExpression(IonParser* parser, IonNode* ast, int index)
         index = ionParseUnaryExpression(parser, ast, index);
 
         IonNode node = ionNodeCreate(ION_NK_BINARY_EXPR, op);
-        node.data.desc_count = index - start;
+        node.desc_count = index - start;
 
-        memmove(&ast[start + 1], &ast[start], node.data.desc_count * sizeof(IonNode));
+        memmove(&ast[start + 1], &ast[start], node.desc_count * sizeof(IonNode));
         ast[start] = node;
 
-        index = start + 1 + node.data.desc_count;
+        index = start + 1 + node.desc_count;
     }
 
     return index;
@@ -162,12 +162,12 @@ int ionParseAdditiveExpression(IonParser* parser, IonNode* ast, int index) {
         index = ionParseMultiplicativeExpression(parser, ast, index);
 
         IonNode node = ionNodeCreate(ION_NK_BINARY_EXPR, op);
-        node.data.desc_count = index - start;
+        node.desc_count = index - start;
 
-        memmove(&ast[start + 1], &ast[start], node.data.desc_count * sizeof(IonNode));
+        memmove(&ast[start + 1], &ast[start], node.desc_count * sizeof(IonNode));
         ast[start] = node;
 
-        index = start + 1 + node.data.desc_count;
+        index = start + 1 + node.desc_count;
     }
 
     return index;
