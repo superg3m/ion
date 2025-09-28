@@ -58,14 +58,6 @@ typedef struct IonNode {
     } data;
 } IonNode;
 
-/*
-// OP is stored in the token
-
-SHUNTING YARD: 5 2 7 * +
-push this 
-Binary(*, left=2, right=7)
-*/
-
 IonNode ionNodeCreate(IonNodeKind kind, IonToken token) {
     IonNode ret;
     ret.kind = kind;
