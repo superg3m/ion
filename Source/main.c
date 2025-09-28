@@ -1,6 +1,6 @@
-#include <frontend/lexer/token.h>
-#include <frontend/lexer/lexer.h>
-#include <frontend/parser/parser.h>
+#include "frontend/lexer/token.h"
+#include "frontend/lexer/lexer.h"
+#include "frontend/parser/parser.h"
 
 #define CKG_IMPL
 #define CKG_OS_INCLUDE
@@ -25,10 +25,11 @@ int main() {
 	}
 
 	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
-	IonNode* left = ionNodeGetLeft(ast, 0);
-	ckg_assert(ionNodeIsLeaf(left));
+	//IonNode* left = ionNodeGetLeft(ast, 0);
+	//ckg_assert(ionNodeIsLeaf(left));
+	//IonNode* right = ionNodeGetRight(ast, 0);
 
-	IonNode* right = ionNodeGetRight(ast, 0);
+	(void)ast;
 
 	return 0;
 }

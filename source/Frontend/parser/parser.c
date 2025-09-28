@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "../ts/type_system.h"
 
 #include <string.h>
 
@@ -51,6 +52,28 @@ bool ionParserConsumeOnMatch(IonParser* parser, IonTokenKind expected_kind) {
     }
 
     return false;
+}
+
+Type parseType(IonParser* parser) {
+	int array_count = 0;
+	while (ionParserPeekNthToken(parser, 0).kind == ION_TS_LEFT_BRACKET) {
+		ionParserConsumeOnMatch(parser, ION_TS_LEFT_BRACKET);
+		ionParserConsumeOnMatch(parser, ION_TS_RIGHT_BRACKET);
+		array_count += 1;
+	}
+
+	if (ionParserPeekNthToken(parser, 0).kind != ION_TOKEN_IDENTIFIER) {
+		return ionTypeUnresolved();
+	}
+
+	IonToken dataTypeToken = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+    Type type = ionTypeCreate(dataTypeToken.lexeme);
+
+	for (int i = 0; i < array_count; i++) {
+		type = ionTypeAddArrayDepth(type);
+	}
+
+	return type;
 }
 
 #define EXPRESSION_FOLDER
@@ -232,12 +255,11 @@ bool ionParserConsumeOnMatch(IonParser* parser, IonTokenKind expected_kind) {
 #if defined(STATEMENT_FOLDER)
     int ionParseStatement(IonParser* parser, IonNode* ast, int index);
 
-
     int ionParseStatement(IonParser* parser, IonNode* ast, int index) {
         IonToken current = ionParserPeekNthToken(parser, 0);
 
         if (current.kind == ION_TOKEN_IDENTIFIER) {
-            return ionParseAssignmentStatement(parser, ast, index);
+            // return ionParseAssignmentStatement(parser, ast, index);
         }
     
         ckg_assert(false);
@@ -256,11 +278,11 @@ bool ionParserConsumeOnMatch(IonParser* parser, IonTokenKind expected_kind) {
         IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
         ionParserExpect(parser, ION_TS_COLON);
         // var dataType *TS.Type
-        if (!ionParserPeekNthToken(parser, 0).kind == ION_TS_EQUALS) {
+        if (ionParserPeekNthToken(parser, 0).kind != ION_TS_EQUALS) {
             // dataType = parser.parseType();
         }
 
-        IonNode node = ionNodeCreate(ION_TKW_VAR, ident);
+        IonNode node = ionNodeCreate(ION_NK_VAR_DECL, ident);
         ast[start] = node;
 
         ionParserExpect(parser, ION_TS_EQUALS);
@@ -277,7 +299,7 @@ bool ionParserConsumeOnMatch(IonParser* parser, IonTokenKind expected_kind) {
         if (current.kind == ION_TKW_VAR) {
             return ionParseVarDecl(parser, ast, index);
         } else if (current.kind == ION_TKW_FUNC) {
-            return ionParseFuncDecl(parser, ast, index);
+            // return ionParseFuncDecl(parser, ast, index);
         }
     
         ckg_assert(false);
