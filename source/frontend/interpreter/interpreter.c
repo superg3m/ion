@@ -1,65 +1,273 @@
 #include <ckg.h>
 #include "../ast/ast.h"
 
-typedef struct Scope {
-	struct Scope* parent   ;
-	CKG_HashMap(CKG_StringView, IonNode*)* variables;
-} Scope;
+#include "scope.h"
 
-Scope ionScopeCreate(Scope* parent) {
-    Scope ret;
-    ret.parent = parent;
-    ckg_hashmap_init_string_view_hash(ret.variables, CKG_StringView, IonNode*);
-
-    return ret;
-}
-
-bool ionScopeHas(Scope* self, CKG_StringView key) {
-    Scope* current = self;
-    while (current != NULLPTR) {
-        if (ckg_hashmap_has(current->variables, key)) {
-            return true;
-        }
-
-        current = current->parent;
-    }
-
-    return false;
-}
-
-IonNode* ionScopeGet(Scope* self, CKG_StringView key) {
-    Scope* current = self;
-    while (current != NULLPTR) {
-        if (ckg_hashmap_has(current->variables, key)) {
-            return ckg_hashmap_get(current->variables, key);
-        }
-
-        current = current->parent;
-    }
-
-    ckg_assert(false);
-    return NULLPTR;
-}
-
-void ionScopeSet(Scope* self, CKG_StringView key, IonNode* value) {
-    Scope* current = self;
-    while (current != NULLPTR) {
-        if (ckg_hashmap_has(current->variables, key)) {
-            ckg_hashmap_put(current->variables, key, value);
-            return;
-        }
-
-        current = current->parent;
-    }
-
-    ckg_hashmap_put(self->variables, key, value);
-}
 
 Scope global_scope;
 CKG_HashMap(CKG_StringView, IonNode*)* global_function = NULLPTR;
 
-IonNode* ionInterpretNode(IonNode* node, Scope* scope);
+// NOTE(Jovanni) this is where it gets hairy because you want to not 
+// have to heap allocate these. But the way its structured makes this impossible because stack lifetimes aren't long enough...
+IonNode* ionEvaluateIntegers(IonToken token, int lhs, int rhs) {
+    IonNode* ret = ckg_alloc(sizeof(IonNode));
+    ret->token = token;
+	switch (token.kind) {
+        case ION_TS_PLUS: {
+            ret->kind = ION_NK_INTEGER_EXPR;
+            ret->data.i = lhs + rhs;
 
+            return ret;
+        } break;
+
+        case ION_TS_MINUS: {
+            ret->kind = ION_NK_INTEGER_EXPR;
+            ret->data.i = lhs - rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_STAR: {
+            ret->kind = ION_NK_INTEGER_EXPR;
+            ret->data.i = lhs * rhs;
+
+            return ret;
+        } break;
+ 
+        case ION_TS_DIVISION: {
+            ret->kind = ION_NK_INTEGER_EXPR;
+            ret->data.i = lhs / rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_EQUALS_EQUALS: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs == rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_NOT_EQUALS: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs != rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_LT: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs < rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_LT_OR_EQUAL: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs <= rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_GT: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs > rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_GT_OR_EQUAL: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs >= rhs;
+
+            return ret;
+        } break;
+
+        default: {
+            ckg_assert(false);
+        } break;
+	}
+
+	ckg_assert(false);
+    return NULLPTR;
+}
+
+// NOTE(Jovanni) this is where it gets hairy because you want to not 
+// have to heap allocate these. But the way its structured makes this impossible because stack lifetimes aren't long enough...
+IonNode* ionEvaluateFloats(IonToken token, float lhs, float rhs) {
+    IonNode* ret = ckg_alloc(sizeof(IonNode));
+    ret->token = token;
+	switch (token.kind) {
+        case ION_TS_PLUS: {
+            ret->kind = ION_NK_FLOAT_EXPR;
+            ret->data.f = lhs + rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_MINUS: {
+            ret->kind = ION_NK_FLOAT_EXPR;
+            ret->data.f = lhs - rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_STAR: {
+            ret->kind = ION_NK_FLOAT_EXPR;
+            ret->data.f = lhs * rhs;
+
+            return ret;
+        } break;
+ 
+        case ION_TS_DIVISION: {
+            ret->kind = ION_NK_FLOAT_EXPR;
+            ret->data.f = lhs / rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_EQUALS_EQUALS: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs == rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_NOT_EQUALS: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs != rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_LT: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs < rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_LT_OR_EQUAL: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs <= rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_GT: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs > rhs;
+
+            return ret;
+        } break;
+
+        case ION_TS_GT_OR_EQUAL: {
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+            ret->data.b = lhs >= rhs;
+
+            return ret;
+        } break;
+
+        default: {
+            ckg_assert(false);
+        } break;
+	}
+
+	ckg_assert(false);
+    return NULLPTR;
+}
+
+IonNode* ionInterpretBinaryExpression(IonToken token, IonNode* left, IonNode* right) {
+    switch (token.kind) {
+        case ION_TS_PLUS:
+        case ION_TS_MINUS:
+        case ION_TS_STAR:
+        case ION_TS_DIVISION:
+        case ION_TS_LT:
+        case ION_TS_LT_OR_EQUAL:
+        case ION_TS_GT:
+        case ION_TS_GT_OR_EQUAL:
+        case ION_TS_EQUALS_EQUALS:
+        case ION_TS_NOT_EQUALS: {
+            if (left->kind == ION_NK_INTEGER_EXPR && right->kind == ION_NK_INTEGER_EXPR) {
+                return ionEvaluateIntegers(token, left->data.i, right->data.i);
+            }
+
+            if (left->kind == ION_NK_FLOAT_EXPR && right->kind == ION_NK_FLOAT_EXPR) {
+                return ionEvaluateFloats(token, left->data.f, right->data.f);
+            }
+
+            if (left->kind == ION_NK_INTEGER_EXPR && right->kind == ION_NK_FLOAT_EXPR) {
+                return ionEvaluateFloats(token, (float)left->data.i, right->data.f);
+            }
+
+            if (left->kind == ION_NK_FLOAT_EXPR && right->kind == ION_NK_INTEGER_EXPR) {
+                return ionEvaluateFloats(token, left->data.f, (float)right->data.i);
+            }
+
+            /*
+            if (left->kind == ION_NK_STRING_EXPR) {
+                if (right->kind == ION_NK_INTEGER_EXPR) {
+                    char buf[32];
+                    snprintf(buf, sizeof(buf), "%d", right->data.i);
+                    return ionEvaluateStrings(token, left->data.s, buf);
+                } else if (right->kind == ION_NK_FLOAT_EXPR) {
+                    char buf[32];
+                    snprintf(buf, sizeof(buf), "%.5g", right->data.f);
+                    return ionEvaluateStrings(token, left->data.s, buf);
+                } else if (right->kind == ION_NK_STRING_EXPR) {
+                    return ionEvaluateStrings(token, left->data.s, right->data.s);
+                }
+            }
+
+
+            if (right->kind == ION_NK_STRING_EXPR) {
+                if (left->kind == ION_NK_INTEGER_EXPR) {
+                    char buf[32];
+                    snprintf(buf, sizeof(buf), "%d", left->data.i);
+                    return ionEvaluateStrings(token, buf, right->data.s);
+                } else if (left->kind == ION_NK_FLOAT_EXPR) {
+                    char buf[32];
+                    snprintf(buf, sizeof(buf), "%.5g", left->data.f);
+                    return ionEvaluateStrings(token, buf, right->data.s);
+                } else if (left->kind == ION_NK_STRING_EXPR) {
+                    return ionEvaluateStrings(token, left->data.s, right->data.s);
+                }
+            }
+            */
+
+            fprintf(stderr, "invalid operands for token %d\n", token.kind);
+            exit(1);
+        } break;
+
+        case ION_TS_LOGICAL_AND:
+        case ION_TS_LOGICAL_OR: {
+            if (left->kind != ION_NK_BOOLEAN_EXPR || right->kind != ION_NK_BOOLEAN_EXPR) {
+                fprintf(stderr, "expected booleans for token %d\n", token.kind);
+                exit(1);
+            }
+
+            IonNode* ret = malloc(sizeof(IonNode));
+            ret->token = token;
+            ret->kind = ION_NK_BOOLEAN_EXPR;
+
+            if (token.kind == ION_TS_LOGICAL_AND) {
+                ret->data.b = left->data.b && right->data.b;
+            } else {
+                ret->data.b = left->data.b || right->data.b;
+            }
+
+            return ret;
+        } break;
+
+        default: {
+            fprintf(stderr, "unhandled operator: %d\n", token.kind);
+            exit(1);
+        } break;
+    }
+}
+
+IonNode* ionInterpretNode(IonNode* node, Scope* scope);
 IonNode* ionInterpretNodes(IonNode* node, Scope* scope) {
     int inital_desc_count = node->desc_count;
     int current_desc_count = 0;
@@ -80,6 +288,13 @@ IonNode* ionInterpretExpression(IonNode* expr, Scope* scope) {
         case ION_NK_FLOAT_EXPR:
         case ION_NK_STRING_EXPR: {
             return expr;
+        } break;
+
+        case ION_NK_BINARY_EXPR: {
+            IonNode* left = ionInterpretExpression(ionNodeGetLeft(expr), scope);
+            IonNode* right = ionInterpretExpression(ionNodeGetRight(expr), scope);
+
+            return ionInterpretBinaryExpression(expr->token, left, right);
         } break;
 
         case ION_NK_IDENTIFIER_EXPR: {
@@ -166,7 +381,10 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
             */
 
             IonNode* block = func_decl + 1;
-            return ionInterpretNodes(block, &function_scope);
+            IonNode* ret = ionInterpretNodes(block, &function_scope);
+            ionScopeFree(&function_scope);
+
+            return ret;
         } break;
 
         case ION_NK_PRINT_STMT: {
@@ -209,6 +427,8 @@ IonNode* ionInterpretNode(IonNode* node, Scope* scope) {
     } else {
         ckg_assert(false);
     }
+
+    return NULLPTR;
 }
 
 void ionInterpretProgram(CKG_Vector(IonNode) ast) {

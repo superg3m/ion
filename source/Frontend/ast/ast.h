@@ -69,7 +69,7 @@ bool ionNodeIsDeclaration(IonNode* node);
 bool ionNodeIsStatement(IonNode* node);
 bool ionNodeIsExpression(IonNode* node);
 
-IonNode* ionNodeGetLHS(IonNode* node);
+// IonNode* ionNodeGetLHS(IonNode* node);
 IonNode* ionNodeGetRHS(IonNode* node);
 IonNode* ionNodeGetExpr(IonNode* node);
 IonNode* ionNodeGetOperand(IonNode* ast);

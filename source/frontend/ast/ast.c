@@ -36,17 +36,19 @@ IonNode* ionNodeGetExpr(IonNode* node) {
     return node + 1;
 }
 
-IonNode* ionNodeGetLHS(IonNode* node) {
+/*
+// This doesn't wokr yet because parsing is incorrect...
+IonNode* ionNodeGetRHS(IonNode* node) {
     ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT);
 
-    return node + 1;
+    // return node + 1;
 }
+*/
 
 IonNode* ionNodeGetRHS(IonNode* node) {
     ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT);
-    IonNode* lhs = ionNodeGetLHS(node);
 
-    return node + 1 + lhs->desc_count;
+    return node + 1;
 }
 
 IonNode* ionNodeGetOperand(IonNode* node) {
@@ -65,5 +67,5 @@ IonNode* ionNodeGetRight(IonNode* node) {
     ckg_assert(node->kind == ION_NK_BINARY_EXPR);
     IonNode* left = ionNodeGetLeft(node);
 
-    return node + 1 + left->desc_count;
+    return left + 1 + left->desc_count;
 }
