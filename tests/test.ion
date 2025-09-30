@@ -4,5 +4,4 @@ fn main() -> void {
     x = 4 + 2.3;
 
     println(x);
-    println(64.3);
 }

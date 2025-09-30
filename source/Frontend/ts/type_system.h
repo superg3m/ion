@@ -41,7 +41,7 @@ typedef struct Parameter Parameter;
 
 /*
 fn test() -> (fn(int) -> [][]int) {
-    return fn() -> [][]int {
+    return fn(x: int) -> [][]int {
         return [][].int[[1, 2, 3], [4, 5]]
     }
 }

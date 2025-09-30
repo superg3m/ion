@@ -36,9 +36,9 @@ typedef enum NodeKind {
     ION_NK_PRINT_STMT = ION_DEFERRABLE_BIT|(ION_NK_BLOCK_STMT + 1),
 
     ION_NK_POST_INCREMENT_SE = ION_EXPRESSION_BIT|ION_STATEMENT_BIT, // i++
-    ION_NK_PRE_INCREMENT_SE = ION_EXPRESSION_BIT|ION_STATEMENT_BIT,  // ++i
-    ION_NK_POST_DECREMENT_SE = ION_EXPRESSION_BIT|ION_STATEMENT_BIT, // i--
-    ION_NK_PRE_DECREMENT_SE = ION_EXPRESSION_BIT|ION_STATEMENT_BIT,  // --i
+    ION_NK_PRE_INCREMENT_SE,                                         // ++i
+    ION_NK_POST_DECREMENT_SE,                                        // i--
+    ION_NK_PRE_DECREMENT_SE,                                         // --i
     ION_NK_FUNC_CALL_SE = ION_DEFERRABLE_BIT|ION_EXPRESSION_BIT|ION_STATEMENT_BIT,
 
 
@@ -69,9 +69,7 @@ bool ionNodeIsDeclaration(IonNode* node);
 bool ionNodeIsStatement(IonNode* node);
 bool ionNodeIsExpression(IonNode* node);
 
-// IonNode* ionNodeGetLHS(IonNode* node);
+IonNode* ionNodeGetLHS(IonNode* node);
 IonNode* ionNodeGetRHS(IonNode* node);
 IonNode* ionNodeGetExpr(IonNode* node);
-IonNode* ionNodeGetOperand(IonNode* ast);
-IonNode* ionNodeGetLeft(IonNode* ast);
-IonNode* ionNodeGetRight(IonNode* ast);
+IonNode* ionNodeGetUnaryOperand(IonNode* ast);

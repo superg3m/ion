@@ -291,8 +291,8 @@ IonNode* ionInterpretExpression(IonNode* expr, Scope* scope) {
         } break;
 
         case ION_NK_BINARY_EXPR: {
-            IonNode* left = ionInterpretExpression(ionNodeGetLeft(expr), scope);
-            IonNode* right = ionInterpretExpression(ionNodeGetRight(expr), scope);
+            IonNode* left = ionInterpretExpression(ionNodeGetLHS(expr), scope);
+            IonNode* right = ionInterpretExpression(ionNodeGetRHS(expr), scope);
 
             return ionInterpretBinaryExpression(expr->token, left, right);
         } break;
@@ -343,11 +343,13 @@ void ionPrintExpression(IonNode* expr, Scope* scope) {
 IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
     switch (stmt->kind) {
         case ION_NK_ASSIGNMENT_STMT: {
+            IonNode* lhs = ionNodeGetLHS(stmt);
+
             ckg_assert_msg(
-                ionScopeHas(scope, stmt->token.lexeme), 
-                "Line: %d | Undeclared Identifier %.*s", 
-                stmt->token.line,
-                stmt->token.lexeme.length, stmt->token.lexeme.data
+                ionScopeHas(scope, lhs->token.lexeme), 
+                "Line: %d | Undeclared Identifier %.*s\n", 
+                lhs->token.line,
+                lhs->token.lexeme.length, lhs->token.lexeme.data
             );
 
             IonNode* rhs = ionInterpretExpression(ionNodeGetRHS(stmt), scope);
@@ -358,7 +360,7 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
                 stmt->token.lexeme.length, stmt->token.lexeme.data
             );
 
-            ionScopeSet(scope, stmt->token.lexeme, rhs);
+            ionScopeSet(scope, lhs->token.lexeme, rhs);
         } break;
 
         case ION_NK_FUNC_CALL_SE: {

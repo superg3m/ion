@@ -27,6 +27,22 @@ bool ionNodeIsDeclaration(IonNode* node) {
     return node->kind & ION_DECLARATION_BIT;
 }
 
+
+
+IonNode* ionNodeGetLHS(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT || node->kind == ION_NK_BINARY_EXPR);
+
+    return node + 1;
+}
+
+IonNode* ionNodeGetRHS(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT || node->kind == ION_NK_BINARY_EXPR);
+
+    IonNode* left = ionNodeGetLHS(node);
+
+    return left + 1 + left->desc_count;
+}
+
 IonNode* ionNodeGetExpr(IonNode* node) {
     ckg_assert(
         node->kind == ION_NK_GROUPING_EXPR ||
@@ -36,36 +52,8 @@ IonNode* ionNodeGetExpr(IonNode* node) {
     return node + 1;
 }
 
-/*
-// This doesn't wokr yet because parsing is incorrect...
-IonNode* ionNodeGetRHS(IonNode* node) {
-    ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT);
-
-    // return node + 1;
-}
-*/
-
-IonNode* ionNodeGetRHS(IonNode* node) {
-    ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT);
-
-    return node + 1;
-}
-
-IonNode* ionNodeGetOperand(IonNode* node) {
+IonNode* ionNodeGetUnaryOperand(IonNode* node) {
     ckg_assert(node->kind == ION_NK_UNARY_EXPR);
 
     return node + 1;
-}
-
-IonNode* ionNodeGetLeft(IonNode* node) {
-    ckg_assert(node->kind == ION_NK_BINARY_EXPR);
-
-    return node + 1;
-}
-
-IonNode* ionNodeGetRight(IonNode* node) {
-    ckg_assert(node->kind == ION_NK_BINARY_EXPR);
-    IonNode* left = ionNodeGetLeft(node);
-
-    return left + 1 + left->desc_count;
 }

@@ -284,13 +284,14 @@ Type ionParseType(IonParser* parser) {
     int ionParseAssignmentStatement(IonParser* parser, IonNode* ast, int index) {
         int start = index;
 
-        IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
-        IonNode node = ionNodeCreate(ION_NK_ASSIGNMENT_STMT, ident);
-        ast[start] = node;
-
-        ionParserExpect(parser, ION_TS_EQUALS);
-
         index = ionParseExpression(parser, ast, index + 1);
+
+        IonToken equals = ionParserExpect(parser, ION_TS_EQUALS);
+
+        index = ionParseExpression(parser, ast, index);
+
+        IonNode ident_node = ionNodeCreate(ION_NK_ASSIGNMENT_STMT, equals);
+        ast[start] = ident_node;
         ast[start].desc_count = index - (start + 1);
 
         ionParserExpect(parser, ION_TS_SEMI_COLON);

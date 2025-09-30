@@ -1104,10 +1104,11 @@
 
         if (!(expression)) {            
             ckg_bind_custom_allocator(ckg_default_libc_malloc, ckg_default_libc_free, NULLPTR);                                  
-            ckg_stack_trace_dump(function, file, line);                               
+            ckg_stack_trace_dump(function, file, line);  
+            CKG_LOG_FATAL("%s", ckg_str_va_sprint(NULLPTR, msg, args));                                
             char ckg_msg[] = "Func: %s, File: %s:%d\n";          
             CKG_LOG_FATAL(ckg_msg, function, file, line);
-            CKG_LOG_FATAL("%s", ckg_str_va_sprint(NULLPTR, msg, args));                
+             
             CRASH;                                                
         }   
 
