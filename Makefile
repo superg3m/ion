@@ -1,8 +1,8 @@
 CC := gcc
 
 SRC_DIR := source
-CORE_DIR := $(SRC_DIR)/Core
-FRONTEND_DIR := $(SRC_DIR)/Frontend
+CORE_DIR := $(SRC_DIR)/core
+FRONTEND_DIR := $(SRC_DIR)/frontend
 
 CFLAGS := -Wall -Wextra -std=c11 -g \
           -I$(SRC_DIR) \
