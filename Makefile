@@ -17,8 +17,8 @@ SRCS := $(wildcard $(SRC_DIR)/*.c) \
 
 # Convert .c -> .o under build/
 OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
-OBJS := $(patsubst $(CORE_DIR)/%.c,$(OBJ_DIR)/Core/%.o,$(OBJS))
-OBJS := $(patsubst $(FRONTEND_DIR)/%/%.c,$(OBJ_DIR)/Frontend/%/%.o,$(OBJS))
+OBJS := $(patsubst $(CORE_DIR)/%.c,$(OBJ_DIR)/core/%.o,$(OBJS))
+OBJS := $(patsubst $(FRONTEND_DIR)/%/%.c,$(OBJ_DIR)/frontend/%/%.o,$(OBJS))
 
 TARGET := ion.exe
 
@@ -33,11 +33,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/Core/%.o: $(CORE_DIR)/%.c
+$(OBJ_DIR)/core/%.o: $(CORE_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/Frontend/%/%.o: $(FRONTEND_DIR)/%/%.c
+$(OBJ_DIR)/frontend/%/%.o: $(FRONTEND_DIR)/%/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
