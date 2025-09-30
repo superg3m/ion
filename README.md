@@ -89,3 +89,30 @@ func get_value(a: int, b: int) -> void {}
 <string_literal> ::= e.g ("Hello", "World")
 <bool_literal> ::= "true" | "false"
 <identifier> ::= e.g(name, test, foo, bar)
+
+
+- Language Features
+    - [] Defer
+    - [] Functions
+    - [] Structs
+    - [] LHS Exprsesion Access
+    - [] Arrays
+    - [] Proper Copying of data when passed to function or assignment
+    - [] Typechecking
+        - [] Type Inference
+
+    - Generic Parameters
+
+
+- Backend Features
+    - [] Tree walk interpreter
+    
+    - [?] Transpile to C
+    - [?] FFI to call native functions
+        - [] If a function definition is marked as foreign then when you encounter a call you know that you
+        have to do a proc address lookup into a dll of a c library.
+
+        foreign fn printf(fmt: string) -> int;
+
+    - [?] ByteCode
+    - [?] LLVM
