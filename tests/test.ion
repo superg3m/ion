@@ -3,5 +3,6 @@ var x: int = 8;
 fn main() -> void {
     x = 4 + 2.3;
 
-    println(x);
+    print(x);
+    print(x);
 }

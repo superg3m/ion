@@ -391,7 +391,9 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
 
         case ION_NK_PRINT_STMT: {
             ionPrintExpression(ionNodeGetExpr(stmt), scope);
-            CKG_LOG_PRINT("\n");
+            if (stmt->data.new_line) {
+                CKG_LOG_PRINT("\n");
+            }
         } break;
         
         default: {
