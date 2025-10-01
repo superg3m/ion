@@ -5,12 +5,12 @@
 
 
 Scope global_scope;
-CKG_HashMap(CKG_StringView, IonNode*)* global_function = NULLPTR;
+CKG_HashMap(CKG_StringView, IonDeclaration*)* global_function = NULLPTR;
 
 // NOTE(Jovanni) this is where it gets hairy because you want to not 
 // have to heap allocate these. But the way its structured makes this impossible because stack lifetimes aren't long enough...
-IonNode* ionEvaluateIntegers(IonToken token, int lhs, int rhs) {
-    IonNode* ret = ckg_alloc(sizeof(IonNode));
+IonExpression* ionEvaluateIntegers(IonToken token, int lhs, int rhs) {
+    IonExpression* ret = ckg_alloc(sizeof(IonExpression));
     ret->token = token;
 	switch (token.kind) {
         case ION_TS_PLUS: {
@@ -94,8 +94,8 @@ IonNode* ionEvaluateIntegers(IonToken token, int lhs, int rhs) {
 
 // NOTE(Jovanni) this is where it gets hairy because you want to not 
 // have to heap allocate these. But the way its structured makes this impossible because stack lifetimes aren't long enough...
-IonNode* ionEvaluateFloats(IonToken token, float lhs, float rhs) {
-    IonNode* ret = ckg_alloc(sizeof(IonNode));
+IonExpression* ionEvaluateFloats(IonToken token, float lhs, float rhs) {
+    IonExpression* ret = ckg_alloc(sizeof(IonExpression));
     ret->token = token;
 	switch (token.kind) {
         case ION_TS_PLUS: {
@@ -177,7 +177,7 @@ IonNode* ionEvaluateFloats(IonToken token, float lhs, float rhs) {
     return NULLPTR;
 }
 
-IonNode* ionInterpretBinaryExpression(IonToken token, IonNode* left, IonNode* right) {
+IonExpression* ionInterpretBinaryExpression(IonToken token, IonExpression* left, IonExpression* right) {
     switch (token.kind) {
         case ION_TS_PLUS:
         case ION_TS_MINUS:
@@ -247,7 +247,7 @@ IonNode* ionInterpretBinaryExpression(IonToken token, IonNode* left, IonNode* ri
                 exit(1);
             }
 
-            IonNode* ret = malloc(sizeof(IonNode));
+            IonExpression* ret = malloc(sizeof(IonExpression));
             ret->token = token;
             ret->kind = ION_NK_BOOLEAN_EXPR;
 
@@ -281,7 +281,7 @@ IonNode* ionInterpretNodes(IonNode* node, Scope* scope) {
     return node;
 }
 
-IonNode* ionInterpretExpression(IonNode* expr, Scope* scope) {
+IonExpression* ionInterpretExpression(IonExpression* expr, Scope* scope) {
     switch (expr->kind) {
         case ION_NK_INTEGER_EXPR:
         case ION_NK_BOOLEAN_EXPR:
@@ -309,7 +309,7 @@ IonNode* ionInterpretExpression(IonNode* expr, Scope* scope) {
     return NULLPTR;
 }
 
-void ionPrintExpression(IonNode* expr, Scope* scope) {
+void ionPrintExpression(IonExpression* expr, Scope* scope) {
     ckg_assert(ionNodeIsExpression(expr));
 
     switch (expr->kind) {
@@ -340,10 +340,10 @@ void ionPrintExpression(IonNode* expr, Scope* scope) {
     }
 }
 
-IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
+IonNode* ionInterpretStatement(IonStatement* stmt, Scope* scope) {
     switch (stmt->kind) {
         case ION_NK_ASSIGNMENT_STMT: {
-            IonNode* lhs = ionNodeGetLHS(stmt);
+            IonExpression* lhs = ionNodeGetLHS(stmt);
 
             ckg_assert_msg(
                 ionScopeHas(scope, lhs->token.lexeme), 
@@ -404,7 +404,7 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
     return stmt + 1 + stmt->desc_count;
 }
 
-IonNode* ionInterpretDeclaration(IonNode* decl, Scope* scope) {
+IonNode* ionInterpretDeclaration(IonDeclaration* decl, Scope* scope) {
     switch (decl->kind) {
         case ION_NK_VAR_DECL: {
             IonNode* RHS = decl + 1;
@@ -445,8 +445,8 @@ void ionInterpretProgram(CKG_Vector(IonNode) ast) {
     }
 
     if (ckg_hashmap_has(global_function, ckg_sv_create("main", sizeof("main") - 1))) {
-        IonNode* mainDecl = ckg_hashmap_get(global_function, ckg_sv_create("main", sizeof("main") - 1));
-        IonNode mainCall = ionNodeCreate(ION_NK_FUNC_CALL_SE, mainDecl->token);
+        IonDeclaration* mainDecl = ckg_hashmap_get(global_function, ckg_sv_create("main", sizeof("main") - 1));
+        IonStatement mainCall = ionNodeCreate(ION_NK_FUNC_CALL_SE, mainDecl->token);
 
 		ionInterpretStatement(&mainCall, &global_scope);
     } else {

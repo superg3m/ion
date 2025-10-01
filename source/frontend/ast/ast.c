@@ -14,7 +14,6 @@ bool ionNodeIsLeaf(IonNode* node) {
     return node->kind & ION_LEAF_NODE_BIT;
 }
 
-
 bool ionNodeIsExpression(IonNode* node) {
     return node->kind & ION_EXPRESSION_BIT;
 }
@@ -26,8 +25,6 @@ bool ionNodeIsStatement(IonNode* node) {
 bool ionNodeIsDeclaration(IonNode* node) {
     return node->kind & ION_DECLARATION_BIT;
 }
-
-
 
 IonNode* ionNodeGetLHS(IonNode* node) {
     ckg_assert(node->kind == ION_NK_ASSIGNMENT_STMT || node->kind == ION_NK_BINARY_EXPR);

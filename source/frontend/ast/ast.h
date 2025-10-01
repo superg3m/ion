@@ -63,6 +63,10 @@ typedef struct IonNode {
     } data;
 } IonNode;
 
+typedef IonNode IonDeclaration;
+typedef IonNode IonExpression;
+typedef IonNode IonStatement;
+
 IonNode ionNodeCreate(IonNodeKind kind, IonToken token);
 bool ionNodeIsLeaf(IonNode* node);
 bool ionNodeIsDeclaration(IonNode* node);

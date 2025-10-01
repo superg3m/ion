@@ -105,6 +105,52 @@ func get_value(a: int, b: int) -> void {}
     - Generic Parameters
 
 
+// Ultimately I think a simple is just a IonToken and structure kind an bool if its resolved yet
+// Basically you want to recorrd all instances of a symbol being used 
+and the context in which its being used.
+
+/*
+// This is for non-declarations of course
+enum IonSymbolKind {
+    ION_SYMBOL_IDENT // the symbol in quesiton is being used as an identifer
+    ION_SYMBOL_TYPE  // the symbol in quesiton is being used as a type
+    ION_SYMBOL_FUNCTION_CALL // the symbol in quesiton is being used as a type
+}
+
+// So the last thing you have to do is just have a mapping:
+StructDeclaration -> ION_SYMBOL_TYPE
+Variable Declaration -> ION_SYMBOL_IDENT
+FunctionCall_SE -> SYMBOL_FUNCITON_CALL
+
+typedef struct IonSymbol {
+    IonSymbolKind kind;
+    IonDeclaration* decl; // NULLPTR if not resolved yet
+    
+    // This is resolved if and only if I can lookup in a symbol and that declaration matches the context.
+    // One nice thing about the symbols is that you can only ever have once instance of a symbol because
+    // we only allow for one symbol per context for example a symbol can't be marked as having
+    // a TYPE context, but later we resolve the definition and its a function decl. This is not allowed.
+} IonSymbol;
+
+typedef struct IonSymbolTable {
+    CKG_HashMap(CKG_StringView, IonSymbol)* symbols;
+    struct IonSymbolTable* parent;
+} IonSymbolTable;
+
+at the end of the second pass iterate through the symbols
+IonSymbolTable table = ...;
+for (int i = 0; i < table.symbols.meta.capacity; i++) {
+    if (entries[i].filled && !entries[i].dead) {
+        CKG_StringView str = entries[i].key;
+        Symbol s = entries[i].value;
+        if (s.decl == NULLPTR) {
+            printf("Unresolved symbol: %.*s", str.length, str.data);
+            exit(-1);
+        }
+    }
+}
+*/
+
 - Backend Features
     - [] Tree walk interpreter
     
