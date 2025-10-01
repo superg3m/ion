@@ -90,8 +90,9 @@ func get_value(a: int, b: int) -> void {}
 <bool_literal> ::= "true" | "false"
 <identifier> ::= e.g(name, test, foo, bar)
 
-
 - Language Features
+    - [] Out of order compilation (remove the need for function prototypes and forward declares)
+    - [] Parse multiple files (How do you even build the ast? Do you build it seperately and just connect it somehow?)
     - [] Defer
     - [] Functions
     - [] Structs
