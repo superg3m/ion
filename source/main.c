@@ -38,14 +38,19 @@ int main() {
 
 	CKG_Vector(IonToken) token_stream = ionLexerGenerateTokenStream(data, file_size);
 
-	for (int i = 0; i < ckg_vector_count(token_stream); i++) {
-		IonToken token = token_stream[i];
-		ionTokenPrint(token);
-	}
+	// for (int i = 0; i < ckg_vector_count(token_stream); i++) {
+	// 	IonToken token = token_stream[i];
+	// 	ionTokenPrint(token);
+	// }
 
 	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
 
-	ionInterpretProgram(ast);
+	
+	ionAstPrint(ast);
+
+
+
+	// ionInterpretProgram(ast);
 
 	return 0;
 }

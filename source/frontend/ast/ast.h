@@ -77,3 +77,6 @@ IonNode* ionNodeGetLHS(IonNode* node);
 IonNode* ionNodeGetRHS(IonNode* node);
 IonNode* ionNodeGetExpr(IonNode* node);
 IonNode* ionNodeGetUnaryOperand(IonNode* ast);
+
+u32 ionNodePrintSubtree(IonNode* node, char* dest_str, u32 w, u32 depth);
+void ionAstPrint(IonNode* ast_root);
