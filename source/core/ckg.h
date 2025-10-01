@@ -560,8 +560,9 @@
             map->meta.equal_fn = __eq_function;                                                               \
             map->meta.key_is_ptr = __key_is_ptr;                                                              \
             map->entries = ckg_alloc(map->meta.entry_size * map->meta.capacity);                              \
+            (KeyType)map->entries[0].key;                                                                     \
+            (ValueType)map->entries[0].value;                                                                 \
         } while(0)                                                                                            \
-
 
         #define ckg_hashmap_init_siphash(map, KeyType, ValueType) ckg_hashmap_init_with_hash(map, KeyType, ValueType, false, siphash24, byte_equality)
         #define ckg_hashmap_init_string_hash(map, KeyType, ValueType) ckg_hashmap_init_with_hash(map, KeyType, ValueType, true, ckg_string_hash, string_equality)
