@@ -51,7 +51,7 @@ typedef struct IonNode {
     u32 desc_count; // every node knows its number of descendants (so we can skip to sibling)
     
     IonToken token; // every node is associated with a specific token and lexeme (from source)
-    IonType   type; // every node knows their type (unless they do not have it e.g. Stmts)
+    Type   type; // every node knows their type (unless they do not have it e.g. Stmts)
 
     union {
         // literal values
@@ -72,6 +72,8 @@ typedef struct IonNode {
 typedef IonNode IonDeclaration;
 typedef IonNode IonExpression;
 typedef IonNode IonStatement;
+
+void ionAstPrint(IonNode* ast_root);
 
 IonNode ionNodeCreate(IonNodeKind kind, IonToken token);
 bool ionNodeIsLeaf(IonNode* node);
