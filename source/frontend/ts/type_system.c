@@ -1,5 +1,5 @@
 #include "type_system.h"
-
+/*
 Type ionTypeUnresolved() {
     Type ret = {0};
     ret.mask = ION_TYPE_UNRESOLVED;
@@ -149,3 +149,4 @@ Type ionTypeRemoveArrayDepth(Type t) {
 
     return t;
 }
+*/

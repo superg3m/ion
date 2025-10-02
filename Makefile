@@ -4,7 +4,7 @@ SRC_DIR := source
 CORE_DIR := $(SRC_DIR)/core
 FRONTEND_DIR := $(SRC_DIR)/frontend
 
-CFLAGS := -Wall -Wextra -std=c11 -g \
+CFLAGS := -Wall -Wextra -std=c11 -g -Wno-unreachable-code-generic-assoc \
           -I$(SRC_DIR) \
           -I$(CORE_DIR) \
 

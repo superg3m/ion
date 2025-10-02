@@ -353,17 +353,12 @@ IonNode* ionInterpretStatement(IonStatement* stmt, Scope* scope) {
             );
 
             IonNode* rhs = ionInterpretExpression(ionNodeGetRHS(stmt), scope);
-            ckg_assert_msg(
-                (rhs->type.mask & ION_TYPE_VOID) == 0,
-                "Line %d | Attempting to assign void to variable: %.*s", 
-                stmt->token.line,
-                stmt->token.lexeme.length, stmt->token.lexeme.data
-            );
 
             ionScopeSet(scope, lhs->token.lexeme, rhs);
         } break;
 
         case ION_NK_FUNC_CALL_SE: {
+            /*
             IonNode* func_decl = ckg_hashmap_get(global_function, stmt->token.lexeme);
 
             int arg_count = stmt->data.arguments ? ckg_vector_count(stmt->data.arguments) : 0;
@@ -374,19 +369,20 @@ IonNode* ionInterpretStatement(IonStatement* stmt, Scope* scope) {
             }
 
             Scope function_scope = ionScopeCreate(&global_scope);
-            /*
+
             for i := 0; i < argCount; i++ {
                 param := functionDeclaration.DeclType.Parameters[i]
                 arg := v.Arguments[i]
                 functionScope.set(param.Tok, interpretExpression(arg, scope))
             }
-            */
+
 
             IonNode* block = func_decl + 1;
             IonNode* ret = ionInterpretNodes(block, &function_scope);
             ionScopeFree(&function_scope);
 
             return ret;
+            */
         } break;
 
         case ION_NK_PRINT_STMT: {
@@ -407,7 +403,7 @@ IonNode* ionInterpretStatement(IonStatement* stmt, Scope* scope) {
 IonNode* ionInterpretDeclaration(IonDeclaration* decl, Scope* scope) {
     switch (decl->kind) {
         case ION_NK_VAR_DECL: {
-            IonNode* RHS = decl + 1;
+            IonNode* RHS = ionNodeGetVarDeclRHS(decl);
             ionScopeSet(scope, decl->token.lexeme, RHS);
         } break;
 

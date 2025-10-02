@@ -46,7 +46,7 @@ int main() {
 	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
 
 	
-	ionAstPrint(ast);
+	ionAstPrettyPrint(ast);
 
 
 

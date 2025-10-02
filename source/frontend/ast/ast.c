@@ -1,4 +1,5 @@
 #include "ast.h"
+#include <cj.h>
 
 IonNode ionNodeCreate(IonNodeKind kind, IonToken token) {
     IonNode ret;
@@ -11,19 +12,57 @@ IonNode ionNodeCreate(IonNodeKind kind, IonToken token) {
 }
 
 bool ionNodeIsLeaf(IonNode* node) {
-    return node->kind & ION_LEAF_NODE_BIT;
+    return node->kind & ION_CLASS_LEAF_NODE;
 }
 
 bool ionNodeIsExpression(IonNode* node) {
-    return node->kind & ION_EXPRESSION_BIT;
+    return node->kind & ION_CLASS_EXPRESSION;
 }
 
 bool ionNodeIsStatement(IonNode* node) {
-    return node->kind & ION_STATEMENT_BIT;
+    return node->kind & ION_CLASS_STATEMENT;
 }
 
 bool ionNodeIsDeclaration(IonNode* node) {
-    return node->kind & ION_DECLARATION_BIT;
+    return node->kind & ION_CLASS_DECLARATION;
+}
+
+const char* ionNodeKindToString(IonNodeKind kind) {
+    static CKG_HashMap(IonNodeKind, const char*)* kind_map = NULLPTR;
+
+    if (kind_map == NULLPTR) {
+        ckg_hashmap_init_siphash(kind_map, IonNodeKind, const char*);
+
+        #define X(kind) ckg_hashmap_put(kind_map, kind, stringify(kind));
+            X_NK_LEAF_NODES
+        #undef X
+
+        #define X(kind) ckg_hashmap_put(kind_map, kind, stringify(kind));
+            X_NK_EXPRESSION
+        #undef X
+
+        #define X(kind) ckg_hashmap_put(kind_map, kind, stringify(kind));
+            X_NK_STATEMENT
+        #undef X
+
+        #define X(kind) ckg_hashmap_put(kind_map, kind, stringify(kind));
+            X_NK_DEFFERABLE_STATEMENTS
+        #undef X
+
+        #define X(kind) ckg_hashmap_put(kind_map, kind, stringify(kind));
+            X_NK_SE
+        #undef X
+
+        #define X(kind) ckg_hashmap_put(kind_map, kind, stringify(kind));
+            X_NK_DEFFERABLE_SES
+        #undef X
+
+        #define X(kind) ckg_hashmap_put(kind_map, kind, stringify(kind));
+            X_NK_DECLARATIONS
+        #undef X
+    }
+
+    return ckg_hashmap_get(kind_map, kind);
 }
 
 IonNode* ionNodeGetLHS(IonNode* node) {
@@ -59,185 +98,203 @@ IonNode* ionNodeGetUnaryOperand(IonNode* node) {
     return node + 1;
 }
 
-// @TODO: be able to pretty print types! (since we need to change type system, it's a todo for later)
-#define ionTypeToStr(...) ""
+IonNode* ionNodeGetIndex(IonNode* node, int index) {
+    ckg_assert(
+        index >= 0 &&
+        (node->kind == ION_NK_LIST || node->kind ==ION_NK_BLOCK_STMT)
+    );
 
-u32 ionNodePrintSubtree(IonNode* node, char* dest_str, u32 w, u32 depth) {
-    #define writefmt(...) __builtin_sprintf(&dest_str[w], __VA_ARGS__)
-
-    u32 write_offset = w;
-
-    // indent if on a new line
-    if (w > 0 && dest_str[w-1] == '\n') {
-        w += writefmt("%*s", 2*depth, "");
+    IonNode* ret = node + 1;
+    while (index != 0) {
+        ret += (1 + ret->desc_count);
+        index -= 1;
     }
 
-    switch (node->kind) {
-        default: { 
-            ckg_assert_msg(false, "unhandled node kind: %d", node->kind); 
-        } break;
-        
-        // leaf nodes (no descendants)
-        case ION_NK_INTEGER_EXPR: { 
-            ckg_assert_msg(node->desc_count == 0, "integer node must have no descendants (leaf)!");
-            w += writefmt("Int<%i>", node->data.i);
-        } break;
-        case ION_NK_FLOAT_EXPR: { 
-            ckg_assert_msg(node->desc_count == 0, "float node must have no descendants (leaf)!");
-            w += writefmt("Float<%.4g>", node->data.f);
-        } break;
-        case ION_NK_BOOLEAN_EXPR: { 
-            ckg_assert_msg(node->desc_count == 0, "boolean node must have no descendants (leaf)!");
-            w += writefmt("Bool<%s>", node->data.b ? "true" : "false");
-        } break;
-        case ION_NK_STRING_EXPR: { 
-            ckg_assert_msg(node->desc_count == 0, "string node must have no descendants (leaf)!");
-            w += writefmt("String<\"%.*s\">", (int)node->data.s.length, node->data.s.data);
-        } break;
-        case ION_NK_IDENTIFIER_EXPR: { 
-            ckg_assert_msg(node->desc_count == 0, "identifier node must have no descendants (leaf)!");
-            w += writefmt("Ident<%.*s>", (int)node->token.lexeme.length, node->token.lexeme.data);
-        } break;
-
-        // expressions
-        case ION_NK_UNARY_EXPR: {
-            w += writefmt("Un.%.*s[", (int)node->token.lexeme.length, node->token.lexeme.data);
-            IonNode* operand = ionNodeGetUnaryOperand(node);
-            ckg_assert_msg((node + 1) + node->desc_count == (operand + 1) + operand->desc_count, "unary node must have exactly one operand as descendant!");
-
-            w += ionNodePrintSubtree(operand, dest_str, w, depth + 1);
-            w += (dest_str[w-1] == '\n') ? writefmt("%*s] //Un.%.*s\n", 2*depth, "", (int)node->token.lexeme.length, node->token.lexeme.data) : writefmt("]");
-        } break;
-        case ION_NK_BINARY_EXPR: {
-            w += writefmt("Bin.%.*s[", (int)node->token.lexeme.length, node->token.lexeme.data);
-            IonNode* lhs = ionNodeGetLHS(node);
-            IonNode* rhs = ionNodeGetRHS(node);
-            ckg_assert_msg((node + 1) + node->desc_count == (rhs + 1) + rhs->desc_count, "binary node must have exactly one lhs and rhs as descendants!");
-
-            w += ionNodePrintSubtree(lhs, dest_str, w, depth + 1); bool is_nl = (dest_str[w-1] == '\n'); w -= is_nl; w += (is_nl) ? writefmt(",\n") : writefmt(", ");
-            w += ionNodePrintSubtree(rhs, dest_str, w, depth + 1);
-            w += (dest_str[w-1] == '\n') ? writefmt("%*s] // Bin.%.*s\n", 2*depth, "", (int)node->token.lexeme.length, node->token.lexeme.data) : writefmt("]");
-        } break;
-        case ION_NK_GROUPING_EXPR: {
-            w += writefmt("Group[");
-            IonNode* expr = ionNodeGetExpr(node);
-            ckg_assert_msg((node + 1) + node->desc_count == (expr + 1) + expr->desc_count, "group node must have exactly one expr as descendant!");
-
-            w += ionNodePrintSubtree(expr, dest_str, w, depth + 1);
-            w += (dest_str[w-1] == '\n') ? writefmt("%*s] // Group\n", 2*depth, "") : writefmt("]");
-        } break;
-
-        // statements
-        case ION_NK_ASSIGNMENT_STMT: {
-            w += writefmt("Assign[ ");
-            IonNode* lhs = ionNodeGetLHS(node);
-            IonNode* rhs = ionNodeGetRHS(node);
-            ckg_assert_msg((node + 1) + node->desc_count == (rhs + 1) + rhs->desc_count, "assign node must have exactly one lhs and rhs as descendants!");
-
-            w += ionNodePrintSubtree(lhs, dest_str, w, depth + 1); bool is_nl = (dest_str[w-1] == '\n'); w -= is_nl; w += (is_nl) ? writefmt(",\n") : writefmt(", ");
-            w += ionNodePrintSubtree(rhs, dest_str, w, depth + 1);
-            w += (dest_str[w-1] == '\n') ? writefmt("%*s] // Assign\n", 2*depth, "") : writefmt(" ]\n");
-        } break;
-        case ION_NK_BLOCK_STMT: {
-            w += writefmt("Block[\n");
-            IonNode* block_end = (node + 1) + node->desc_count;
-            for (IonNode* child_node = (node + 1); child_node < block_end; child_node += (1 + child_node->desc_count)) {
-                w += ionNodePrintSubtree(child_node, dest_str, w, depth + 1);
-                w -= (dest_str[w-1] == '\n'); w += writefmt(",\n");
-            }
-            w -= (dest_str[w-1] <= ' ' && dest_str[w-2] == ',') ? 2 : 0;
-            w += writefmt("\n%*s] // Block\n", 2*depth, "");
-        } break;
-        case ION_NK_PRINT_STMT: {
-            w += writefmt("Print%s[ ", node->data.new_line ? "ln" : "");
-            IonNode* expr = ionNodeGetExpr(node);
-            ckg_assert_msg((node + 1) + node->desc_count == (expr + 1) + expr->desc_count, "print node must have exactly one expr as descendant!");
-
-            w += ionNodePrintSubtree(expr, dest_str, w, depth + 1);
-            w += (dest_str[w-1] == '\n') ? writefmt("%*s] // Print%s\n", 2*depth, "", node->data.new_line ? "ln" : "") : writefmt(" ]\n");
-        } break;
-        case ION_NK_POST_INCREMENT_SE:
-        case ION_NK_PRE_INCREMENT_SE:
-        case ION_NK_POST_DECREMENT_SE:
-        case ION_NK_PRE_DECREMENT_SE: {
-            char* op_prefix_str = (node->kind == ION_NK_POST_INCREMENT_SE || node->kind == ION_NK_POST_DECREMENT_SE) ? "Post" : "Pre";
-            char* op_token_str = (node->kind == ION_NK_POST_INCREMENT_SE || node->kind == ION_NK_PRE_INCREMENT_SE) ? "++" : "--";
-
-            w += writefmt("%s.%s[ ", op_prefix_str, op_token_str);
-            IonNode* expr = ionNodeGetExpr(node);
-            ckg_assert_msg((node + 1) + node->desc_count == (expr + 1) + expr->desc_count, "increment/decrement node must have exactly one expr as descendant!");
-
-            w += ionNodePrintSubtree(expr, dest_str, w, depth + 1);
-            w += (dest_str[w-1] == '\n') ? writefmt("%*s] // %s.%s\n", 2*depth, "", op_prefix_str, op_token_str) : writefmt(" ]\n");
-        } break;
-
-        case ION_NK_FUNC_CALL_SE: {
-            w += writefmt("Call[ ");
-
-            // @FIXME: CallExpr should have arbitrary lvalue not just identifier
-            // @TODO: proper LHS printing for callee-expr
-            w += writefmt("Func[%.*s], ", (int)node->token.lexeme.length, node->token.lexeme.data);
-
-            // @FIXME: currently call expr stores the args in data.arguments
-            // @TODO: arg list should just be descendant nodes of call-expr
-            for (u32 i = 0; i < node->desc_count; i++) {
-                w += ionNodePrintSubtree(node->data.arguments[i], dest_str, w, depth + 1);
-                w -= (dest_str[w-1] == '\n'); w += writefmt(",\n");
-            }
-            bool is_nl = (dest_str[w-1] == '\n');
-            w -= (dest_str[w-1] <= ' ' && dest_str[w-2] == ',') ? 2 : 0;
-            w += (is_nl) ? writefmt("\n%*s] // Call\n", 2*depth, "") : writefmt(" ]\n");
-        } break;
-
-        // declarations
-        case ION_NK_VAR_DECL: {
-            w += writefmt("VarDecl[ ");
-
-            // @FIXME: var name and type should not be special cased and should be descendant nodes of var-decl (not embedded in node!)
-            w += writefmt("Name<%.*s>, ", (int)node->token.lexeme.length, node->token.lexeme.data);
-            w += writefmt("VarType[%s], ", ionTypeToStr(node->type));
-            
-            for (IonNode* child_node = (node + 1); child_node < (node + 1) + node->desc_count; child_node += (1 + child_node->desc_count)) {
-                w += ionNodePrintSubtree(child_node, dest_str, w, depth + 1);
-                bool is_nl = (dest_str[w-1] == '\n'); w -= is_nl; w += (is_nl) ? writefmt(",\n") : writefmt(", ");
-            }
-            bool is_nl = (dest_str[w-1] == '\n');
-            w -= (dest_str[w-1] <= ' ' && dest_str[w-2] == ',') ? 2 : 0;
-            w += (is_nl) ? writefmt("\n%*s] // VarDecl\n", 2*depth, "") : writefmt(" ]\n");
-        } break;
-        case ION_NK_FUNC_DECL: {
-            w += writefmt("FuncDecl[\n");
-            
-            w += writefmt("%*sName<%.*s>,\n", 2*(depth+1), "", (int)node->token.lexeme.length, node->token.lexeme.data);
-            // @FIXME: param list should not be special cased and should be descendant nodes of func-decl (not embedded in node!)
-            // @TODO: param list printing
-            w += writefmt("%*sFuncProtoType[%s]\n", 2*(depth+1), "", ionTypeToStr(node->type));
-
-            // body
-            for (IonNode* child_node = (node + 1); child_node < (node + 1) + node->desc_count; child_node += (1 + child_node->desc_count)) {
-                w += ionNodePrintSubtree(child_node, dest_str, w, depth + 1);
-                w -= (dest_str[w-1] == '\n'); w += writefmt(",\n");
-            }
-            w -= (dest_str[w-1] <= ' ' && dest_str[w-2] == ',') ? 2 : 0;
-            w += writefmt("\n%*s] // FuncDecl\n", 2*depth, "");
-        } break;
-    }
-    u32 n_bytes_written = w - write_offset;
-    
-    #undef writefmt
-    return n_bytes_written;
+    return ret;
 }
 
-void ionAstPrint(IonNode* ast_root) {
-    char subtree_str_buffer[64*1024];
+IonNode* ionNodeGetFuncDeclParams(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_FUNC_DECL);
 
-    for (IonNode* child_node = ast_root; child_node->kind != ION_NK_END; child_node += (1 + child_node->desc_count)) {
-        u32 subtree_str_len = ionNodePrintSubtree(child_node, subtree_str_buffer, 0, 0);
-        // ensure toplevel (depth = 1 from ast root) end up on a new line
-        if (subtree_str_buffer[subtree_str_len-1] != '\n') {
-            subtree_str_buffer[subtree_str_len++] = '\n';
+    return node + 1;
+}
+IonNode* ionNodeGetFuncDeclReturnType(IonNode* node) {
+    IonNode* params = ionNodeGetFuncDeclParams(node);
+
+    return params + (1 + params->desc_count);
+}
+IonNode* ionNodeGetFuncDeclBlock(IonNode* node){
+    IonNode* return_type = ionNodeGetFuncDeclReturnType(node);
+
+    return return_type + (1 + return_type->desc_count);
+}
+
+IonNode* ionNodeGetVarDeclType(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_VAR_DECL);
+
+    return node + 1;
+}
+IonNode* ionNodeGetVarDeclRHS(IonNode* node) {
+    IonNode* decl_type = ionNodeGetVarDeclType(node);
+
+    return decl_type + (1 + decl_type->desc_count);
+}
+
+static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
+    #define TO_CJ_SV(sv) (CJ_StringView){sv.data, 0, sv.length}
+
+    if (ionNodeIsExpression(node)) {
+        switch (node->kind) {
+            case ION_NK_STRING_EXPR: {
+                return JSON_STRING_VIEW(arena, ((CJ_StringView){node->token.lexeme.data, 1, node->token.lexeme.length - 2}));
+            } break;
+
+            case ION_NK_INTEGER_EXPR: {
+                return JSON_INT(arena, node->data.i);
+            } break;
+
+            case ION_NK_FLOAT_EXPR: {
+                return JSON_FLOAT(arena, node->data.f);
+            } break;
+
+            case ION_NK_BOOLEAN_EXPR: {
+                return JSON_BOOL(arena, node->data.b);
+            } break;
+
+            case ION_NK_IDENTIFIER_EXPR: {
+                return JSON_STRING_VIEW(arena, TO_CJ_SV(node->token.lexeme));
+            } break;
+
+            case ION_NK_UNARY_EXPR: {
+                JSON* unary_root = cj_create(arena);
+                
+                JSON* desc = cj_create(arena);
+                cj_push(desc, "op", TO_CJ_SV(node->token.lexeme));
+                cj_push(desc, "operand", ionAstToJsonHelper(ionNodeGetUnaryOperand(node), arena));
+
+                cj_push(unary_root, "UnaryOp", desc);
+
+                return unary_root;
+            } break;
+
+            case ION_NK_BINARY_EXPR: {
+                JSON* binary_root = cj_create(arena);
+
+                JSON* desc = cj_create(arena);
+                cj_push(desc, "op", TO_CJ_SV(node->token.lexeme));
+                cj_push(desc, "left", ionAstToJsonHelper(ionNodeGetLHS(node), arena));
+                cj_push(desc, "right", ionAstToJsonHelper(ionNodeGetRHS(node), arena));
+
+                cj_push(binary_root, "BinaryOp", desc);
+
+                return binary_root;
+            } break;
+
+            case ION_NK_GROUPING_EXPR: {
+                JSON* grouping_root = cj_create(arena);
+                cj_push(grouping_root, "Grouping", ionAstToJsonHelper(ionNodeGetExpr(node), arena));
+
+                return grouping_root;
+            } break;
+
+            default: {
+                ckg_assert_msg(false, "Expression kind: %s not handled!\n", ionNodeKindToString(node->kind));
+            } break;
+        } 
+    } else if (ionNodeIsStatement(node)) {
+        switch (node->kind) {
+            case ION_NK_PRINT_STMT: {
+                JSON* print_root = cj_create(arena);
+                cj_push(print_root, "PrintStatement", ionAstToJsonHelper(ionNodeGetExpr(node), arena));
+
+                return print_root;
+            } break;
+
+            case ION_NK_ASSIGNMENT_STMT: {
+                JSON* assignment_root = cj_create(arena);
+
+                JSON* desc = cj_create(arena);
+                cj_push(desc, "left", ionAstToJsonHelper(ionNodeGetLHS(node), arena));
+                cj_push(desc, "right", ionAstToJsonHelper(ionNodeGetRHS(node), arena));
+
+                cj_push(assignment_root, "AssignmentStatement", desc);
+
+                return assignment_root;
+            } break;
+
+            default: {
+                ckg_assert_msg(false, "Expression kind: %s not handled!\n", ionNodeKindToString(node->kind));
+            } break;
         }
+    } else if (ionNodeIsDeclaration(node)) {
+        switch (node->kind) {
+            case ION_NK_FUNC_DECL: {
+                JSON* func_decl_root = cj_create(arena);
 
-        CKG_LOG_PRINT("%.*s", subtree_str_len, subtree_str_buffer);
+                // IonNode* params = ionNodeGetFuncDeclParams(node);
+                // IonNode* return_type = ionNodeGetFuncDeclReturnType(node);
+
+                IonNode* block = ionNodeGetFuncDeclBlock(node);
+                JSON* block_array = cj_array_create(arena);
+                for (int i = 0; i < block->data.list_count; i++) {
+                    cj_array_push(block_array, ionAstToJsonHelper(ionNodeGetIndex(block, i), arena));
+                }
+
+                JSON* desc = cj_create(arena);
+                cj_push(desc, "params", "NOT IMPLEMENTED YET!");
+                cj_push(desc, "return_type", "NOT IMPLEMENTED YET!");
+                cj_push(desc, "block", block_array);
+                cj_push(func_decl_root, ckg_str_sprint(NULLPTR, "FuncDecl<%.*s>", node->token.lexeme.length, node->token.lexeme.data), desc);
+
+                return func_decl_root;
+            } break;
+
+            case ION_NK_VAR_DECL: {
+                JSON* var_decl_root = cj_create(arena);
+
+                // IonNode* decl_type = ionNodeGetVarDeclType(node);
+
+                JSON* desc = cj_create(arena);
+                cj_push(desc, "decl_type", "NOT IMPLEMENTED YET!");
+                cj_push(desc, "rhs", ionAstToJsonHelper(ionNodeGetVarDeclRHS(node), arena));
+                cj_push(var_decl_root, ckg_str_sprint(NULLPTR, "VarDecl<%.*s>", node->token.lexeme.length, node->token.lexeme.data), desc);
+
+                return var_decl_root;
+            } break;
+
+            default: {
+                ckg_assert_msg(false, "Expression kind: %s not handled!\n", ionNodeKindToString(node->kind));
+            } break;
+        }
+    } else {
+        ckg_assert(false);
     }
+
+    return NULL;
+}
+
+static JSON* ionProgramToJson(CKG_Vector(IonNode) ast, CJ_Arena* arena) {
+    JSON* json_root = cj_create(arena);
+    JSON* json_declerations = cj_array_create(arena);
+    cj_push(json_root, "Declerations", json_declerations);
+
+    for (IonNode* decl = ast; decl->kind != ION_NK_END; decl += (1 + decl->desc_count)) {
+        cj_array_push(json_declerations, ionAstToJsonHelper(decl, arena));
+    }
+
+    return json_root;
+}
+
+void ionAstPrettyPrint(CKG_Vector(IonNode) ast) {
+    char* indent = "    ";
+    cj_set_context_indent(indent);
+    CJ_Arena* arena = cj_arena_create(0);
+
+    JSON* json = ionProgramToJson(ast, arena);
+    ckg_assert_msg(json, "Failed to jsonify ast\n");
+
+    char* str = cj_to_string(json);
+    printf("%s\n", str);
+
+    cj_arena_free(arena);
 }

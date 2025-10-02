@@ -34,8 +34,6 @@ enum {
     ION_TYPE_INFO_INDEXABLE = (1u << 29),
 };
 
-typedef struct Parameter Parameter;
-
 // Im not sure if this can represent types like
 // func() -> func(int) -> array -> array -> int
 
@@ -50,18 +48,9 @@ fn test() -> (fn(int) -> [][]int) {
 typedef struct Type {
     InfoMask mask;
     u8 array_depth;  // 0 for non-array types
-    CKG_Vector(Parameter) parameters; // if you are function type
 
     // struct Type* next;
 } Type;
-
-typedef struct Parameter  {
-	IonToken token;
-	Type type;
-} Parameter;
-
-Type ionTypeUnresolved();
-Type ionTypeFunc(CKG_Vector(Parameter) parameters, Type return_type);
 
 Type ionGetReturnType(Type t);
 Type ionTypeCreate(CKG_StringView sv);

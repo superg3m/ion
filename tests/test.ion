@@ -1,6 +1,6 @@
 var x: int = 8;
 
-fn main() -> void {
+fn main(argc: int, argc: []string) -> void {
     x = 4 + 2.3;
 
     print(x);

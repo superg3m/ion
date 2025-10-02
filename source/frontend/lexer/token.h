@@ -86,6 +86,7 @@ typedef struct IonToken {
 } IonToken;
 
 IonToken ionTokenCreate(IonTokenKind kind, CKG_StringView lexeme, int line);
+IonToken ionTokenCreateFake();
 
 const char* ionTokenKindGetString(IonTokenKind kind);
 void ionTokenPrint(IonToken token);

@@ -1102,14 +1102,18 @@
     void MACRO_ckg_assert_msg(bool expression, const char* function, const char* file, int line, const char* msg, ...) {  
         if (!(expression)) {            
             ckg_bind_custom_allocator(ckg_default_libc_malloc, ckg_default_libc_free, NULLPTR);                                  
-            ckg_stack_trace_dump(function, file, line);                               
-            char ckg_msg[] = "Func: %s, File: %s:%d\n";          
-            CKG_LOG_FATAL(ckg_msg, function, file, line);
+            ckg_stack_trace_dump(function, file, line);      
 
             va_list args;
             va_start(args, msg);
-                CKG_LOG_FATAL("%s", ckg_str_va_sprint(NULLPTR, msg, args));   
-            va_end(args); 
+                char* formatted_msg = ckg_str_va_sprint(NULLPTR, msg, args);
+            va_end(args);
+            
+            CKG_LOG_FATAL("%s", formatted_msg);
+            ckg_free(formatted_msg);
+
+            char ckg_msg[] = "Func: %s, File: %s:%d\n";          
+            CKG_LOG_FATAL(ckg_msg, function, file, line);
 
             CRASH;                                                
         }                                                                                 
