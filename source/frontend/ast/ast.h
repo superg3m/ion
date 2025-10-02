@@ -48,19 +48,25 @@ typedef enum NodeKind {
 
 typedef struct IonNode {
     IonNodeKind kind;
-    IonToken token; // return, binary: operator, int, float, string, bool, identifer
-    u32 desc_count;
-    Type type;
+    u32 desc_count; // every node knows its number of descendants (so we can skip to sibling)
+    
+    IonToken token; // every node is associated with a specific token and lexeme (from source)
+    IonType   type; // every node knows their type (unless they do not have it e.g. Stmts)
+
     union {
-        int i;
+        // literal values
+        int   i;
         float f;
-        bool b;
+        bool  b;
         CKG_StringView s;
 
-        bool new_line; // for print statement
+        // support both print & println using single "print" ast node kind
+        bool new_line;
 
-        CKG_Vector(struct IonNode*) arguments; // only for function calls;
+        // func calls
+        CKG_Vector(struct IonNode*) arguments;
     } data;
+
 } IonNode;
 
 typedef IonNode IonDeclaration;
@@ -77,6 +83,3 @@ IonNode* ionNodeGetLHS(IonNode* node);
 IonNode* ionNodeGetRHS(IonNode* node);
 IonNode* ionNodeGetExpr(IonNode* node);
 IonNode* ionNodeGetUnaryOperand(IonNode* ast);
-
-u32 ionNodePrintSubtree(IonNode* node, char* dest_str, u32 w, u32 depth);
-void ionAstPrint(IonNode* ast_root);
