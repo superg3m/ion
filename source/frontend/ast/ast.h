@@ -62,6 +62,7 @@ typedef enum NodeKind {
     ION_NK_TYPE_EXPR,
     ION_NK_TYPE_MODIFIER,
     ION_NK_TYPE_IDENT,
+    ION_NK_PARAM,
 
     // LEAF NODES
     __LEAF_NODES__ = ION_CLASS_LEAF_NODE|ION_CLASS_EXPRESSION,
@@ -152,3 +153,6 @@ IonNode* ionNodeGetFuncDeclBlock(IonNode* node);
 
 IonNode* ionNodeGetVarDeclType(IonNode* node);
 IonNode* ionNodeGetVarDeclRHS(IonNode* node);
+
+IonNode* ionNodeGetParamIdent(IonNode* node);
+IonNode* ionNodeGetParamTypeExpr(IonNode* node);

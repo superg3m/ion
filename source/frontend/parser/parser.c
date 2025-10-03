@@ -59,15 +59,20 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
     int start = index;
     ast[index++] = ionNodeCreate(ION_NK_TYPE_EXPR, ionTokenCreateFake());
 
+    int count = 0;
 	while (ionParserPeekNthToken(parser, 0).kind == ION_TS_LEFT_BRACKET) {
 		IonToken bracket = ionParserExpect(parser, ION_TS_LEFT_BRACKET);
 		ionParserExpect(parser, ION_TS_RIGHT_BRACKET);
 
         ast[index++] = ionNodeCreate(ION_NK_TYPE_MODIFIER, bracket);
+        count += 1;
 	}
 
 	IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
     ast[index++] = ionNodeCreate(ION_NK_TYPE_IDENT, ident);
+    count += 1;
+
+    ast[start].data.list_count = count;
     ast[start].desc_count = index - (start + 1);
 
 	return index;
@@ -390,6 +395,25 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
         return index;
     }
 
+    int ionParseParam(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
+        int start = index;
+
+        ast[index++] = ionNodeCreate(ION_NK_PARAM, ionTokenCreateFake());
+
+        IonToken token = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+        ast[index++] = ionNodeCreate(ION_NK_IDENTIFIER_EXPR, token);
+        ionParserExpect(parser, ION_TS_COLON);
+        index = ionParseType(parser, ast, index);
+
+        if (ionParserPeekNthToken(parser, 0).kind != ION_TS_RIGHT_PAREN) {
+            ionParserExpect(parser, ION_TS_COMMA);
+        }
+
+        ast[start].desc_count = index - (start + 1);
+
+        return index;
+    }
+
     int ionParseParameterList(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
         int start = index;
 
@@ -398,15 +422,7 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
 
         int param_count = 0;
         while (!ionParserConsumeOnMatch(parser, ION_TS_RIGHT_PAREN)) {
-            IonToken token = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
-            ast[index++] = ionNodeCreate(ION_NK_IDENTIFIER_EXPR, token);
-            ionParserExpect(parser, ION_TS_COLON);
-            index = ionParseType(parser, ast, index);
-
-            if (ionParserPeekNthToken(parser, 0).kind != ION_TS_RIGHT_PAREN) {
-                ionParserExpect(parser, ION_TS_COMMA);
-            }
-
+            index = ionParseParam(parser, ast, index);
             param_count += 1;
         }
 
