@@ -1,7 +1,13 @@
 var x: int = 8;
 
-fn main(argc: int, argv: []string) -> void {
+fn do_something(a: int) -> void {
+    println(a);
+}
+
+fn main() -> void {
     x = 4 + 2.3;
+
+    do_something(1000);
 
     println(x);
     println(x + 4);

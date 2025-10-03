@@ -131,6 +131,12 @@ IonNode* ionNodeGetParamTypeExpr(IonNode* node) {
     return ident + 1 + ident->desc_count;
 }
 
+IonNode* ionNodeGetFuncCallArgs(IonNode* node) {
+    ckg_assert(node->kind == ION_NK_FUNC_CALL_SE);
+    
+    return node + 1;
+}
+
 IonNode* ionNodeGetFuncDeclParams(IonNode* node) {
     ckg_assert(node->kind == ION_NK_FUNC_DECL);
 
@@ -225,6 +231,13 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
                 cj_push(grouping_root, "Grouping", ionAstToJsonHelper(ionNodeGetExpr(node), arena));
 
                 return grouping_root;
+            } break;
+
+            case ION_NK_FUNC_CALL_SE: {
+                JSON* function_call_root = cj_create(arena);
+                cj_push(function_call_root, "FunctionCall<>", TO_CJ_SV(node->token.lexeme));
+
+                return function_call_root;
             } break;
 
             default: {

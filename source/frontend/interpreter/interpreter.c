@@ -5,12 +5,12 @@
 
 
 Scope global_scope;
-CKG_HashMap(CKG_StringView, IonDeclaration*)* global_function = NULLPTR;
+CKG_HashMap(CKG_StringView, IonNode*)* global_function = NULLPTR;
 
 // NOTE(Jovanni) this is where it gets hairy because you want to not 
 // have to heap allocate these. But the way its structured makes this impossible because stack lifetimes aren't long enough...
-IonExpression* ionEvaluateIntegers(IonToken token, int lhs, int rhs) {
-    IonExpression* ret = ckg_alloc(sizeof(IonExpression));
+IonNode* ionEvaluateIntegers(IonToken token, int lhs, int rhs) {
+    IonNode* ret = ckg_alloc(sizeof(IonNode));
     ret->token = token;
 	switch (token.kind) {
         case ION_TS_PLUS: {
@@ -94,8 +94,8 @@ IonExpression* ionEvaluateIntegers(IonToken token, int lhs, int rhs) {
 
 // NOTE(Jovanni) this is where it gets hairy because you want to not 
 // have to heap allocate these. But the way its structured makes this impossible because stack lifetimes aren't long enough...
-IonExpression* ionEvaluateFloats(IonToken token, float lhs, float rhs) {
-    IonExpression* ret = ckg_alloc(sizeof(IonExpression));
+IonNode* ionEvaluateFloats(IonToken token, float lhs, float rhs) {
+    IonNode* ret = ckg_alloc(sizeof(IonNode));
     ret->token = token;
 	switch (token.kind) {
         case ION_TS_PLUS: {
@@ -177,7 +177,7 @@ IonExpression* ionEvaluateFloats(IonToken token, float lhs, float rhs) {
     return NULLPTR;
 }
 
-IonExpression* ionInterpretBinaryExpression(IonToken token, IonExpression* left, IonExpression* right) {
+IonNode* ionInterpretBinaryExpression(IonToken token, IonNode* left, IonNode* right) {
     switch (token.kind) {
         case ION_TS_PLUS:
         case ION_TS_MINUS:
@@ -247,7 +247,7 @@ IonExpression* ionInterpretBinaryExpression(IonToken token, IonExpression* left,
                 exit(1);
             }
 
-            IonExpression* ret = malloc(sizeof(IonExpression));
+            IonNode* ret = malloc(sizeof(IonNode));
             ret->token = token;
             ret->kind = ION_NK_BOOLEAN_EXPR;
 
@@ -272,16 +272,21 @@ IonNode* ionInterpretNodes(IonNode* node, Scope* scope) {
     int inital_desc_count = node->desc_count;
     int current_desc_count = 0;
 
-    node += 1;
+    IonNode* t_node = node + 1;
     while (inital_desc_count != current_desc_count) {
-        current_desc_count += (1 + node->desc_count);
-		node = ionInterpretNode(node, scope);
+        current_desc_count += (1 + t_node->desc_count);
+        IonNode* res = ionInterpretNode(t_node, scope);
+        if (res != NULLPTR) {
+            return res;
+        }
+
+        t_node += (1 + t_node->desc_count);
 	}
 
-    return node;
+    return NULL;
 }
 
-IonExpression* ionInterpretExpression(IonExpression* expr, Scope* scope) {
+IonNode* ionInterpretExpression(IonNode* expr, Scope* scope) {
     switch (expr->kind) {
         case ION_NK_INTEGER_EXPR:
         case ION_NK_BOOLEAN_EXPR:
@@ -309,7 +314,7 @@ IonExpression* ionInterpretExpression(IonExpression* expr, Scope* scope) {
     return NULLPTR;
 }
 
-void ionPrintExpression(IonExpression* expr, Scope* scope) {
+void ionPrintExpression(IonNode* expr, Scope* scope) {
     ckg_assert(ionNodeIsExpression(expr));
 
     switch (expr->kind) {
@@ -336,10 +341,10 @@ void ionPrintExpression(IonExpression* expr, Scope* scope) {
     }
 }
 
-IonNode* ionInterpretStatement(IonStatement* stmt, Scope* scope) {
+IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
     switch (stmt->kind) {
         case ION_NK_ASSIGNMENT_STMT: {
-            IonExpression* lhs = ionNodeGetLHS(stmt);
+            IonNode* lhs = ionNodeGetLHS(stmt);
 
             ckg_assert_msg(
                 ionScopeHas(scope, lhs->token.lexeme), 
@@ -354,25 +359,27 @@ IonNode* ionInterpretStatement(IonStatement* stmt, Scope* scope) {
         } break;
 
         case ION_NK_FUNC_CALL_SE: {
+            IonNode* args = ionNodeGetFuncCallArgs(stmt);
+
             IonNode* func_decl = ckg_hashmap_get(global_function, stmt->token.lexeme);
             IonNode* params = ionNodeGetFuncDeclParams(func_decl);
             IonNode* block = ionNodeGetFuncDeclBlock(func_decl);
             
-            // int arg_count = stmt->data.arguments ? ckg_vector_count(stmt->data.arguments) : 0;
-            int param_count = func_decl->data.list_count;
+            int arg_count = args->data.list_count;
+            int param_count = params->data.list_count;
 
-            /*
             if (param_count != arg_count) {
-                ckg_assert_msg(false, "expected %d parameter(s), got %d\n", arg_count, param_count);
+                ckg_assert_msg(false, "Call to %.*s() expected %d argument(s), got %d\n", func_decl->token.lexeme.length, func_decl->token.lexeme.data, param_count, arg_count);
             }
-            */
 
             Scope function_scope = ionScopeCreate(&global_scope);
 
-            for (int i = 0; i < func_decl->data.list_count; i++) {
-                //IonNode* param = ionNodeGetIndex(params, i);
-                //arg := v.Arguments[i]
-                //ionScopeSet(&function_scope, param->token.lexeme, ionInterpretExpression(args, scope))
+
+            for (int i = 0; i < param_count; i++) {
+                IonNode* param = ionNodeGetIndex(params, i);
+                IonNode* param_ident = ionNodeGetParamIdent(param);
+                IonNode* arg = ionNodeGetIndex(args, i);
+                ionScopeSet(&function_scope, param_ident->token.lexeme, ionInterpretExpression(arg, scope));
             }
 
    
@@ -395,10 +402,10 @@ IonNode* ionInterpretStatement(IonStatement* stmt, Scope* scope) {
         } break;
     }
 
-    return stmt + 1 + stmt->desc_count;
+    return NULLPTR;
 }
 
-IonNode* ionInterpretDeclaration(IonDeclaration* decl, Scope* scope) {
+IonNode* ionInterpretDeclaration(IonNode* decl, Scope* scope) {
     switch (decl->kind) {
         case ION_NK_VAR_DECL: {
             IonNode* RHS = ionNodeGetVarDeclRHS(decl);
@@ -414,7 +421,7 @@ IonNode* ionInterpretDeclaration(IonDeclaration* decl, Scope* scope) {
         } break;
     }
 
-   return decl + 1 + decl->desc_count;
+   return NULLPTR;
 }
 
 IonNode* ionInterpretNode(IonNode* node, Scope* scope) {
@@ -435,14 +442,17 @@ void ionInterpretProgram(CKG_Vector(IonNode) ast) {
 
     IonNode* program = ast;
     while (program->kind != ION_NK_END) {
-        program = ionInterpretDeclaration(program, &global_scope);
+        ionInterpretDeclaration(program, &global_scope);
+        program += (1 + program->desc_count);
     }
 
     if (ckg_hashmap_has(global_function, ckg_sv_create("main", sizeof("main") - 1))) {
-        IonDeclaration* mainDecl = ckg_hashmap_get(global_function, ckg_sv_create("main", sizeof("main") - 1));
-        IonStatement mainCall = ionNodeCreate(ION_NK_FUNC_CALL_SE, mainDecl->token);
+        IonNode* mainDecl = ckg_hashmap_get(global_function, ckg_sv_create("main", sizeof("main") - 1));
+        IonNode* mainCall = ckg_alloc(sizeof(IonNode) * 2);
+        mainCall[0] = ionNodeCreate(ION_NK_FUNC_CALL_SE, mainDecl->token);
+        mainCall[1] = ionNodeCreate(ION_NK_LIST, ionTokenCreateFake());
 
-		ionInterpretStatement(&mainCall, &global_scope);
+		ionInterpretStatement(mainCall, &global_scope);
     } else {
         ckg_assert_msg(false, "main function not found\n");
     }

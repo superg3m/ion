@@ -124,7 +124,7 @@ FunctionCall_SE -> SYMBOL_FUNCITON_CALL
 
 typedef struct IonSymbol {
     IonSymbolKind kind;
-    IonDeclaration* decl; // NULLPTR if not resolved yet
+    IonNode* decl; // NULLPTR if not resolved yet
     
     // This is resolved if and only if I can lookup in a symbol and that declaration matches the context.
     // One nice thing about the symbols is that you can only ever have once instance of a symbol because

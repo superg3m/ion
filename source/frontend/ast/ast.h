@@ -127,10 +127,6 @@ typedef struct IonNode {
 
 } IonNode;
 
-typedef IonNode IonDeclaration;
-typedef IonNode IonExpression;
-typedef IonNode IonStatement;
-
 void ionAstPrettyPrint(CKG_Vector(IonNode) ast);
 
 IonNode ionNodeCreate(IonNodeKind kind, IonToken token);
@@ -156,3 +152,5 @@ IonNode* ionNodeGetVarDeclRHS(IonNode* node);
 
 IonNode* ionNodeGetParamIdent(IonNode* node);
 IonNode* ionNodeGetParamTypeExpr(IonNode* node);
+
+IonNode* ionNodeGetFuncCallArgs(IonNode* node);
