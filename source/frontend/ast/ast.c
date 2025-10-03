@@ -293,6 +293,7 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
                 IonNode* params = ionNodeGetFuncDeclParams(node);
                 // IonNode* return_type = ionNodeGetFuncDeclReturnType(node);
 
+                // NODE(Jovanni): REALISITICALLY I COULD JUST USE THE SOURCE VIEW.........
                 u64 length = 0;
                 char* buffer = MACRO_cj_arena_push(arena, BUFFER_CAPACITY);
                 ckg_str_append_char(buffer, &length, 1024, '(');
