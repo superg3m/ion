@@ -49,7 +49,7 @@ int main() {
 	ionAstPrettyPrint(ast);
 
 
-	// ionInterpretProgram(ast);
+	ionInterpretProgram(ast);
 
 	CKG_LOG_SUCCESS("used/cap: %zu / %zu = %f\n", arena.used, arena.capacity, (float)arena.used / (float)arena.capacity);
 	ckg_arena_free(&arena);

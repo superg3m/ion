@@ -330,10 +330,6 @@ void ionPrintExpression(IonExpression* expr, Scope* scope) {
             // CKG_LOG_PRINT("%.*s", expr->data.s);
         } break;
 
-        case ION_NK_IDENTIFIER_EXPR: {
-            ionPrintExpression(ionInterpretExpression(expr, scope), scope);
-        } break;
-
         default: {
             ckg_assert(false);
         } break;
@@ -358,35 +354,37 @@ IonNode* ionInterpretStatement(IonStatement* stmt, Scope* scope) {
         } break;
 
         case ION_NK_FUNC_CALL_SE: {
-            /*
             IonNode* func_decl = ckg_hashmap_get(global_function, stmt->token.lexeme);
+            IonNode* params = ionNodeGetFuncDeclParams(func_decl);
+            IonNode* block = ionNodeGetFuncDeclBlock(func_decl);
+            
+            // int arg_count = stmt->data.arguments ? ckg_vector_count(stmt->data.arguments) : 0;
+            int param_count = func_decl->data.list_count;
 
-            int arg_count = stmt->data.arguments ? ckg_vector_count(stmt->data.arguments) : 0;
-            int param_count = func_decl->type.parameters ? ckg_vector_count(func_decl->type.parameters) : 0;
-
+            /*
             if (param_count != arg_count) {
                 ckg_assert_msg(false, "expected %d parameter(s), got %d\n", arg_count, param_count);
             }
+            */
 
             Scope function_scope = ionScopeCreate(&global_scope);
 
-            for i := 0; i < argCount; i++ {
-                param := functionDeclaration.DeclType.Parameters[i]
-                arg := v.Arguments[i]
-                functionScope.set(param.Tok, interpretExpression(arg, scope))
+            for (int i = 0; i < func_decl->data.list_count; i++) {
+                //IonNode* param = ionNodeGetIndex(params, i);
+                //arg := v.Arguments[i]
+                //ionScopeSet(&function_scope, param->token.lexeme, ionInterpretExpression(args, scope))
             }
 
-
-            IonNode* block = func_decl + 1;
+   
             IonNode* ret = ionInterpretNodes(block, &function_scope);
             ionScopeFree(&function_scope);
 
             return ret;
-            */
         } break;
 
         case ION_NK_PRINT_STMT: {
-            ionPrintExpression(ionNodeGetExpr(stmt), scope);
+            IonNode* expr = ionInterpretExpression(ionNodeGetExpr(stmt), scope);
+            ionPrintExpression(expr, scope);
             if (stmt->data.new_line) {
                 CKG_LOG_PRINT("\n");
             }
