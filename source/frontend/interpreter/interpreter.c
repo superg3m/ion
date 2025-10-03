@@ -450,7 +450,8 @@ void ionInterpretProgram(CKG_Vector(IonNode) ast) {
         IonNode* mainDecl = ckg_hashmap_get(global_function, ckg_sv_create("main", sizeof("main") - 1));
         IonNode* mainCall = ckg_alloc(sizeof(IonNode) * 2);
         mainCall[0] = ionNodeCreate(ION_NK_FUNC_CALL_SE, mainDecl->token);
-        mainCall[1] = ionNodeCreate(ION_NK_LIST, ionTokenCreateFake());
+        mainCall[1] = ionNodeCreate(ION_NK_LIST, ionTokenCreateFake()); 
+        // mainCall[1] is args, so we could now pass main like argc, argv if we wanted too...
 
 		ionInterpretStatement(mainCall, &global_scope);
     } else {
