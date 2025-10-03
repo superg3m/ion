@@ -235,7 +235,23 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
 
             case ION_NK_FUNC_CALL_SE: {
                 JSON* function_call_root = cj_create(arena);
-                cj_push(function_call_root, "FunctionCall<>", TO_CJ_SV(node->token.lexeme));
+
+                int paren_count = 0;
+                const char* data = node->token.lexeme.data;
+                u64 length = node->token.lexeme.length;
+
+                do {
+                    if (data[length] == '(') {
+                        paren_count += 1;
+                    } else if (data[length] == ')') {
+                        paren_count -= 1;
+                    }
+
+                    length += 1;
+                } while (paren_count != 0);
+
+                CKG_StringView sv = ckg_sv_create(data, length);
+                cj_push(function_call_root, ckg_str_sprint(NULLPTR, "FunctionCall<Line: %d>", node->token.line), TO_CJ_SV(sv));
 
                 return function_call_root;
             } break;
@@ -278,7 +294,7 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
                 // IonNode* return_type = ionNodeGetFuncDeclReturnType(node);
 
                 u64 length = 0;
-                char* buffer = ckg_alloc(BUFFER_CAPACITY);
+                char* buffer = MACRO_cj_arena_push(arena, BUFFER_CAPACITY);
                 ckg_str_append_char(buffer, &length, 1024, '(');
                 for (int i = 0; i < params->data.list_count; i++) {
                     IonNode* param = ionNodeGetIndex(params, i);
@@ -317,7 +333,7 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
                 JSON* var_decl_root = cj_create(arena);
 
                 u64 length = 0;
-                char* buffer = ckg_alloc(BUFFER_CAPACITY);
+                char* buffer = MACRO_cj_arena_push(arena, BUFFER_CAPACITY);
                 ionAppendTypeToBuffer(ionNodeGetVarDeclType(node), buffer, &length, BUFFER_CAPACITY);
                 
                 JSON* desc = cj_create(arena);
