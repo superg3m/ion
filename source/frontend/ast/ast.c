@@ -1,6 +1,8 @@
 #include "ast.h"
 #include <cj.h>
 
+#define BUFFER_CAPACITY 1024
+
 IonNode ionNodeCreate(IonNodeKind kind, IonToken token) {
     IonNode ret;
     ret.kind = kind;
@@ -156,6 +158,18 @@ IonNode* ionNodeGetVarDeclRHS(IonNode* node) {
     return decl_type + (1 + decl_type->desc_count);
 }
 
+static void ionAppendTypeToBuffer(IonNode* type_expr, char* buffer, u64* length, int cap) {
+    for (int j = 0; j < type_expr->data.list_count; j++) {
+        IonNode* type_component = ionNodeGetIndex(type_expr, j);
+        if (type_component->token.lexeme.data[0] == '[') {
+            ckg_str_append_char(buffer, length, cap, '[');
+            ckg_str_append_char(buffer, length, cap, ']');
+        } else {
+            ckg_str_append(buffer, length, cap, type_component->token.lexeme.data, type_component->token.lexeme.length);
+        }
+    }
+}
+
 static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
     #define TO_CJ_SV(sv) (CJ_StringView){sv.data, 0, sv.length}
 
@@ -250,38 +264,28 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
                 IonNode* params = ionNodeGetFuncDeclParams(node);
                 // IonNode* return_type = ionNodeGetFuncDeclReturnType(node);
 
-                char buffer[1024] = {0};
-
-                int length = 0;
-                ckg_str_append_char(buffer, length++, 1024, '(');
+                u64 length = 0;
+                char* buffer = ckg_alloc(BUFFER_CAPACITY);
+                ckg_str_append_char(buffer, &length, 1024, '(');
                 for (int i = 0; i < params->data.list_count; i++) {
                     IonNode* param = ionNodeGetIndex(params, i);
                     IonNode* ident = ionNodeGetParamIdent(param);
-                    ckg_str_append(buffer, length, 1024, ident->token.lexeme.data, ident->token.lexeme.length);
-                    length += ident->token.lexeme.length;
-
-                    ckg_str_append(buffer, length, 1024, ": ", sizeof(": ") - 1);
-                    length += sizeof(": ") - 1;
-
-                    IonNode* type_expr = ionNodeGetParamTypeExpr(param);
-                    for (int j = 0; j < type_expr->data.list_count; j++) {
-                        IonNode* type_component = ionNodeGetIndex(type_expr, j);
-                        if (type_component->token.lexeme.data[0] == '[') {
-                            ckg_str_append_char(buffer, length++, 1024, '[');
-                            ckg_str_append_char(buffer, length++, 1024, ']');
-                        } else {
-                            ckg_str_append(buffer, length, 1024, type_component->token.lexeme.data, type_component->token.lexeme.length);
-                            length += type_component->token.lexeme.length;
-                        }
-                    }
+                    ckg_str_append(buffer, &length, 1024, ident->token.lexeme.data, ident->token.lexeme.length);
+                    ckg_str_append(buffer, &length, 1024, ": ", sizeof(": ") - 1);
+                    ionAppendTypeToBuffer(ionNodeGetParamTypeExpr(param), buffer, &length, BUFFER_CAPACITY);
 
                     if (i < params->data.list_count - 1) {
-                        ckg_str_append(buffer, length, 1024, ", ", sizeof(", ") - 1);
-                        length += sizeof(", ") - 1;
+                        ckg_str_append(buffer, &length, 1024, ", ", sizeof(", ") - 1);
                     }
                 }
-                ckg_str_append_char(buffer, length++, 1024, ')');
+                ckg_str_append_char(buffer, &length, 1024, ')');
 
+                ckg_str_append_char(buffer, &length, 1024, ' ');
+                ckg_str_append_char(buffer, &length, 1024, '-');
+                ckg_str_append_char(buffer, &length, 1024, '>');
+                ckg_str_append_char(buffer, &length, 1024, ' ');
+
+                ionAppendTypeToBuffer(ionNodeGetFuncDeclReturnType(node), buffer, &length, 1024);
 
                 IonNode* block = ionNodeGetFuncDeclBlock(node);
                 JSON* block_array = cj_array_create(arena);
@@ -290,8 +294,6 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
                 }
 
                 JSON* desc = cj_create(arena);
-                cj_push(desc, "params", "NOT IMPLEMENTED YET!");
-                cj_push(desc, "return_type", "NOT IMPLEMENTED YET!");
                 cj_push(desc, "block", block_array);
                 cj_push(func_decl_root, ckg_str_sprint(NULLPTR, "FuncDecl<%.*s>%s", node->token.lexeme.length, node->token.lexeme.data, buffer), desc);
 
@@ -301,10 +303,12 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
             case ION_NK_VAR_DECL: {
                 JSON* var_decl_root = cj_create(arena);
 
-                // IonNode* decl_type = ionNodeGetVarDeclType(node);
-
+                u64 length = 0;
+                char* buffer = ckg_alloc(BUFFER_CAPACITY);
+                ionAppendTypeToBuffer(ionNodeGetVarDeclType(node), buffer, &length, BUFFER_CAPACITY);
+                
                 JSON* desc = cj_create(arena);
-                cj_push(desc, "decl_type", "NOT IMPLEMENTED YET!");
+                cj_push(desc, "decl_type", buffer);
                 cj_push(desc, "rhs", ionAstToJsonHelper(ionNodeGetVarDeclRHS(node), arena));
                 cj_push(var_decl_root, ckg_str_sprint(NULLPTR, "VarDecl<%.*s>", node->token.lexeme.length, node->token.lexeme.data), desc);
 
