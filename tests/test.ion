@@ -1,6 +1,6 @@
 var x: int = 8;
 
-fn do_something(a: int) -> void {
+fn do_something(a: int, b: []string) -> void {
     println(a);
 }
 

@@ -369,13 +369,13 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
             int param_count = params->data.list_count;
 
             if (param_count != arg_count) {
-                ckg_assert_msg(false, "Call to %.*s() expected %d argument(s), got %d\n", func_decl->token.lexeme.length, func_decl->token.lexeme.data, param_count, arg_count);
+                // ckg_assert_msg(false, "Call to %.*s() expected %d argument(s), got %d\n", func_decl->token.lexeme.length, func_decl->token.lexeme.data, param_count, arg_count);
             }
 
             Scope function_scope = ionScopeCreate(&global_scope);
 
 
-            for (int i = 0; i < param_count; i++) {
+            for (int i = 0; i < arg_count; i++) {
                 IonNode* param = ionNodeGetIndex(params, i);
                 IonNode* param_ident = ionNodeGetParamIdent(param);
                 IonNode* arg = ionNodeGetIndex(args, i);
@@ -450,7 +450,8 @@ void ionInterpretProgram(CKG_Vector(IonNode) ast) {
         IonNode* mainDecl = ckg_hashmap_get(global_function, ckg_sv_create("main", sizeof("main") - 1));
         IonNode* mainCall = ckg_alloc(sizeof(IonNode) * 2);
         mainCall[0] = ionNodeCreate(ION_NK_FUNC_CALL_SE, mainDecl->token);
-        mainCall[1] = ionNodeCreate(ION_NK_LIST, ionTokenCreateFake()); 
+        mainCall[1] = ionNodeCreate(ION_NK_LIST, ionTokenCreateFake());
+        
         // mainCall[1] is args, so we could now pass main like argc, argv if we wanted too...
 
 		ionInterpretStatement(mainCall, &global_scope);
