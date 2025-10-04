@@ -123,6 +123,8 @@ typedef struct IonNode {
         bool new_line;
 
         int list_count; // Used for things such as param_list or arg_list or even arrays
+    
+        // IonType type;
     } data;
 
 } IonNode;

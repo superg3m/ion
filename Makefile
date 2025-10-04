@@ -4,7 +4,7 @@ SRC_DIR := source
 CORE_DIR := $(SRC_DIR)/core
 FRONTEND_DIR := $(SRC_DIR)/frontend
 
-CFLAGS := -Wall -Wextra -std=c11 -g -Wno-unreachable-code-generic-assoc \
+CFLAGS := -Wall -Wextra -std=c11 -g -Wno-implicit-fallthrough -Wno-unreachable-code-generic-assoc \
           -I$(SRC_DIR) \
           -I$(CORE_DIR) \
 
@@ -42,6 +42,10 @@ $(OBJ_DIR)/frontend/%/%.o: $(FRONTEND_DIR)/%/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET)
+	rm -rf $(OBJ_DIR) $(TARGET) mini_type_system_test
 
-.PHONY: all clean
+# Build mini type system test
+mini_test: source/mini_type_system_test.c source/frontend/ts/new_type_system.c
+	$(CC) $(CFLAGS) -o mini_type_system_test $^
+
+.PHONY: all clean mini_test
