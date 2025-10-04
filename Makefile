@@ -1,51 +1,18 @@
-CC := gcc
+CC = gcc
+CFLAGS = -Wall -Wextra -Wno-unreachable-code-generic-assoc -Wno-unused-value -Wno-unused-parameter -std=c11 -g
+INCLUDES = -Isource -Isource/core
 
-SRC_DIR := source
-CORE_DIR := $(SRC_DIR)/core
-FRONTEND_DIR := $(SRC_DIR)/frontend
+# Find all source `*.c` files (excluding `_test.c`)
+SRC_FILES = $(filter-out %_test.c, $(shell find source -name '*.c'))
 
-CFLAGS := -Wall -Wextra -std=c11 -g -Wno-implicit-fallthrough -Wno-unreachable-code-generic-assoc \
-          -I$(SRC_DIR) \
-          -I$(CORE_DIR) \
+# Targets
+ion: $(SRC_FILES)
+	$(CC) $(CFLAGS) $(INCLUDES) -o ion.exe $(SRC_FILES)
 
-OBJ_DIR := build
-
-# Find all .c files
-SRCS := $(wildcard $(SRC_DIR)/*.c) \
-        $(wildcard $(CORE_DIR)/*.c) \
-        $(wildcard $(FRONTEND_DIR)/*/*.c)
-
-# Convert .c -> .o under build/
-OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
-OBJS := $(patsubst $(CORE_DIR)/%.c,$(OBJ_DIR)/core/%.o,$(OBJS))
-OBJS := $(patsubst $(FRONTEND_DIR)/%/%.c,$(OBJ_DIR)/frontend/%/%.o,$(OBJS))
-
-TARGET := ion.exe
-
-all: $(TARGET)
-
-# Link final executable
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
-
-# Pattern rules for each source tree
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/core/%.o: $(CORE_DIR)/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/frontend/%/%.o: $(FRONTEND_DIR)/%/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+headless_ts_test: source/headless_ts_test.c source/frontend/ts/new_type_system.c
+	$(CC) $(CFLAGS) $(INCLUDES) -o headless_ts_test.exe $^
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) mini_type_system_test
+	rm -f *.exe
 
-# Build mini type system test
-mini_test: source/mini_type_system_test.c source/frontend/ts/new_type_system.c
-	$(CC) $(CFLAGS) -o mini_type_system_test $^
-
-.PHONY: all clean mini_test
+.PHONY: ion headless_ts_test clean

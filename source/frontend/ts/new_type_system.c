@@ -146,20 +146,19 @@ IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
         return ionTypePoison();
     }
 
-    // compat_set vs compat_set
+    IonType ty_res = ty_act; // copy wrappers
+    ty_res.compat_set = intersection_compat_set; // set compat set to intersection
+    ty_res._bits = 0; // reset concrete
+    
+    // compat_set vs compat_set: return intersection compat set
     bool ty_act_is_concrete = ionTypeIsConcrete(ty_act);
     bool ty_exp_is_concrete = ionTypeIsConcrete(ty_exp);
     
     if (!ty_act_is_concrete && !ty_exp_is_concrete) {
-        return (IonType){
-            ._bits = 0,
-            .compat_set = intersection_compat_set,
-            .n_wrappers = ty_act.n_wrappers,
-            .wrappers = ty_act.wrappers,
-        };
+        return ty_res;
     }
     
-    // concrete vs concrete
+    // concrete vs concrete: return concrete if they match else poison
     // @TOFO: upcast e.g. int8 (actual) where int32 is expected
     //        downcast is rejected since it may imply truncation (masking low bits)
     if (ty_act_is_concrete && ty_exp_is_concrete) {
@@ -167,12 +166,8 @@ IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
             return ionTypePoison();
         }
         
-        return (IonType){
-            ._bits = ty_act._bits,
-            .compat_set = intersection_compat_set,
-            .n_wrappers = ty_act.n_wrappers,
-            .wrappers = ty_act.wrappers,
-        };
+        ty_res._bits = ty_act._bits;
+        return ty_res;
     }
 
     // concrete vs compat_set (*2)
@@ -194,7 +189,7 @@ IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
 
 // pretty print a type
 void ionTypePrint(IonType ty) {
-    for (u32 w = 0; w < ty.n_wrappers; w++) {
+    for (u32 w = ty.n_wrappers-1; w < ty.n_wrappers; --w) {
         switch (ty.wrappers[w].kind) {
             case ION_TYPE_WRAPPER_POINTER: CKG_LOG_PRINT("*"); break;
             case ION_TYPE_WRAPPER_SLICE: CKG_LOG_PRINT("[]"); break;
@@ -232,15 +227,13 @@ void ionTypePrint(IonType ty) {
         }
         
         // Compat Set
-        #define bit_index(c) __builtin_ctz(c)
-
         const char* compat_set_strings[] = {
-            [bit_index(ION_TYPE_COMPAT_VOID)] = "void",
-            [bit_index(ION_TYPE_COMPAT_BOOL)] = "bool",
-            [bit_index(ION_TYPE_COMPAT_UINT)] = "uint",
-            [bit_index(ION_TYPE_COMPAT_SINT)] = "sint",
-            [bit_index(ION_TYPE_COMPAT_FLOAT)] = "float",
-            [bit_index(ION_TYPE_COMPAT_STR)] = "str",
+            [ION_TYPE_COMPAT_BIT_INDEX(VOID)] = "void",
+            [ION_TYPE_COMPAT_BIT_INDEX(BOOL)] = "bool",
+            [ION_TYPE_COMPAT_BIT_INDEX(UINT)] = "uint",
+            [ION_TYPE_COMPAT_BIT_INDEX(SINT)] = "sint",
+            [ION_TYPE_COMPAT_BIT_INDEX(FLOAT)] = "float",
+            [ION_TYPE_COMPAT_BIT_INDEX(STR)] = "str",
         };
 
         for (u32 bit_index = 0; bit_index < 8; bit_index++) {

@@ -2083,12 +2083,12 @@
             uint8_t* pt = (uint8_t*)&t; 
             const uint8_t* m = (const uint8_t*)in;
             switch (source_size) {
-                case 7: pt[6] = m[6];
-                case 6: pt[5] = m[5];
-                case 5: pt[4] = m[4];
+                case 7: pt[6] = m[6]; /* fallthrough */
+                case 6: pt[5] = m[5]; /* fallthrough */
+                case 5: pt[4] = m[4]; /* fallthrough */
                 case 4: *((uint32_t*)&pt[0]) = *((uint32_t*)&m[0]); break;
-                case 3: pt[2] = m[2];
-                case 2: pt[1] = m[1];
+                case 3: pt[2] = m[2]; /* fallthrough */
+                case 2: pt[1] = m[1]; /* fallthrough */
                 case 1: pt[0] = m[0];
             }
             b |= _le64toh(t);

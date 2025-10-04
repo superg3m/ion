@@ -2,7 +2,7 @@
 
 #include <ckg.h>
 
-#define IonNode void
+#define IonNode void  // @FIXME: hack due to running test headless (detached from ast.h)
 
 typedef u32 IonBuiltinTypeID;
 enum {
@@ -18,16 +18,18 @@ enum {
 };
 
 typedef u8 IonTypeCompatSet;
+#define ION_TYPE_COMPAT_BIT_INDEX(compat_suffix) __builtin_ctz(ION_TYPE_COMPAT_ ## compat_suffix)
 enum {
-    ION_TYPE_COMPAT_VOID   = 0x01, // to be fair, for both `void` and `bool` the only possible members of the
-    ION_TYPE_COMPAT_BOOL   = 0x02, // compatibility set is `void` and `bool` respectively, so these are redundant
-    ION_TYPE_COMPAT_UINT   = 0x04,
-    ION_TYPE_COMPAT_SINT   = 0x08,
-    ION_TYPE_COMPAT_FLOAT  = 0x10,
-    ION_TYPE_COMPAT_STR    = 0x20,
+    ION_TYPE_COMPAT_VOID  = 0x01, // to be fair, for both `void` and `bool` the only possible members of the
+    ION_TYPE_COMPAT_BOOL  = 0x02, // compatibility set is `void` and `bool` respectively, so these are redundant
+    ION_TYPE_COMPAT_UINT  = 0x04,
+    ION_TYPE_COMPAT_SINT  = 0x08,
+    ION_TYPE_COMPAT_FLOAT = 0x10,
+    ION_TYPE_COMPAT_STR   = 0x20,
 };
 #define ION_TYPE_COMPAT_NONE 0x0  // used by UserDef Types (compat only with same concrete, not compatible as a set!)
 #define ION_TYPE_COMPAT_ALL 0xFF  // used by Poison Type
+
 
 typedef u8 IonTypeWrapperKind8;
 enum {
@@ -83,7 +85,12 @@ IonType ionTypeFloat32(void);
 IonType ionTypeBool(void);
 IonType ionTypeStr(void);
 IonType ionTypeCreate(CKG_StringView sv);
+
+#define ionTypeWrapPointer(ty) ionTypeWrap(ty, ION_TYPE_WRAPPER_POINTER, 0)
+#define ionTypeWrapSlice(ty) ionTypeWrap(ty, ION_TYPE_WRAPPER_SLICE, 0)
+#define ionTypeWrapArray(ty, arr_item_count) ionTypeWrap(ty, ION_TYPE_WRAPPER_ARRAY, arr_item_count)
 IonType ionTypeWrap(IonType ty, IonTypeWrapperKind8 wrapper_kind, u32 arr_item_count);
+
 IonType ionTypeIntersect(IonType ty1, IonType ty2);
 
 void ionTypePrint(IonType ty);
