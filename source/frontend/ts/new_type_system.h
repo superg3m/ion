@@ -71,6 +71,7 @@ typedef struct IonType {
 bool ionTypeIsConcrete(IonType ty);
 bool ionTypeIsBuiltin(IonType ty);
 bool ionTypeIsPoison(IonType ty);
+bool ionTypeWrapperEq(IonTypeWrapper ty1, IonTypeWrapper ty2);
 bool ionTypeWrappersEq(IonType ty1, IonType ty2);
 
 IonTypeCompatSet ionTypeToCompatSet(IonType ty);

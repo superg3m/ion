@@ -12,19 +12,21 @@ bool ionTypeIsPoison(IonType ty) {
     return ty.compat_set == ION_TYPE_COMPAT_ALL; 
 }
 
+bool ionTypeWrapperEq(IonTypeWrapper ty1, IonTypeWrapper ty2) {
+    if (ty1.kind != ty2.kind) {
+        return false;
+    }
+    return ty1.kind != ION_TYPE_WRAPPER_ARRAY || (ty1.arr_item_count == ty2.arr_item_count);
+}
+
 bool ionTypeWrappersEq(IonType ty1, IonType ty2) {
     if (ty1.n_wrappers != ty2.n_wrappers) {
         return false;
     }
     
     for (u32 i = 0; i < ty1.n_wrappers; i++) {
-        if (ty1.wrappers[i].kind != ty2.wrappers[i].kind) {
+        if (!ionTypeWrapperEq(ty1.wrappers[i], ty2.wrappers[i])) {
             return false;
-        }
-        if (ty1.wrappers[i].kind == ION_TYPE_WRAPPER_ARRAY) {
-            if (ty1.wrappers[i].arr_item_count != ty2.wrappers[i].arr_item_count) {
-                return false;
-            }
         }
     }
     
@@ -74,14 +76,14 @@ IonType ionTypeVoid(void) {
 
 IonType ionTypeInt32(void) {
     IonType ret = {0};
-    ret.builtin_type_id = ION_BTYPE_i32; // @FIXME: remove, use compat set only and infer
-    ret.compat_set = ION_TYPE_COMPAT_SINT | ION_TYPE_COMPAT_UINT;
+    ret.builtin_type_id = ION_BTYPE_i32;
+    ret.compat_set = ION_TYPE_COMPAT_SINT;
     return ret;
 }
 
 IonType ionTypeFloat32(void) {
     IonType ret = {0};
-    ret.builtin_type_id = ION_BTYPE_f32; // @FIXME: remove, use compat set only and infer
+    ret.builtin_type_id = ION_BTYPE_f32;
     ret.compat_set = ION_TYPE_COMPAT_FLOAT;
     return ret;
 }
@@ -153,7 +155,7 @@ IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
             ._bits = 0,
             .compat_set = intersection_compat_set,
             .n_wrappers = ty_act.n_wrappers,
-            .wrappers = {ty_act.wrappers[0], ty_act.wrappers[1], ty_act.wrappers[2], ty_act.wrappers[3]},
+            .wrappers = ty_act.wrappers,
         };
     }
     
@@ -169,7 +171,7 @@ IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
             ._bits = ty_act._bits,
             .compat_set = intersection_compat_set,
             .n_wrappers = ty_act.n_wrappers,
-            .wrappers = {ty_act.wrappers[0], ty_act.wrappers[1], ty_act.wrappers[2], ty_act.wrappers[3]},
+            .wrappers = ty_act.wrappers,
         };
     }
 
