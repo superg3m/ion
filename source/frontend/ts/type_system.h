@@ -4,7 +4,8 @@
 
 typedef u32 IonBuiltinTypeID;
 enum {
-    ION_BTYPE_SIGNALING_POISON = -1,
+    ION_BTYPE_SIGNALING_POISON = (u32)-1,
+    ION_BTYPE_PLACEHOLDER = 0,
     ION_BTYPE_void = 1,
     ION_BTYPE_bool,
     ION_BTYPE_u8,ION_BTYPE_u16,ION_BTYPE_u32,ION_BTYPE_u64,
@@ -70,8 +71,10 @@ typedef struct IonType {
 
 // Function declarations
 bool ionTypeIsConcrete(IonType ty);
+bool ionTypeIsPlaceholder(IonType ty);
 bool ionTypeIsBuiltin(IonType ty);
 bool ionTypeIsPoison(IonType ty);
+bool ionTypeIsSignalingPoison(IonType ty);
 bool ionTypeWrapperEq(IonTypeWrapper ty1, IonTypeWrapper ty2);
 bool ionTypeWrappersEq(IonType ty1, IonType ty2);
 
@@ -90,6 +93,6 @@ IonType ionTypeCreate(CKG_StringView sv);
 #define ionTypeWrapArray(ty, arr_item_count) ionTypeWrap(ty, ION_TYPE_WRAPPER_ARRAY, arr_item_count)
 IonType ionTypeWrap(IonType ty, IonTypeWrapperKind8 wrapper_kind, u32 arr_item_count);
 
-IonType ionTypeIntersect(IonType ty1, IonType ty2);
+IonType ionTypeIntersectInternal(IonType ty1, IonType ty2);
 
 void ionTypePrint(IonType ty);

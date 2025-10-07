@@ -376,10 +376,9 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
 
 
             for (int i = 0; i < arg_count; i++) {
-                IonNode* param = ionNodeGetIndex(params, i);
-                IonNode* param_ident = ionNodeGetParamIdent(param);
+                IonNode* param_decl = ionNodeGetIndex(params, i);
                 IonNode* arg = ionNodeGetIndex(args, i);
-                ionScopeSet(&function_scope, param_ident->token.lexeme, ionInterpretExpression(arg, scope));
+                ionScopeSet(&function_scope, param_decl->token.lexeme, ionInterpretExpression(arg, scope));
             }
 
    

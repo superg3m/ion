@@ -415,10 +415,8 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index, bool exp
     int ionParseParam(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
         int start = index;
 
-        ast[index++] = ionNodeCreate(ION_NK_PARAM, ionTokenCreateFake());
-
-        IonToken token = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
-        ast[index++] = ionNodeCreate(ION_NK_IDENTIFIER_EXPR, token);
+        IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+        ast[index++] = ionNodeCreate(ION_NK_PARAM_DECL, ident);
 
         ionParserExpect(parser, ION_TS_COLON);
         index = ionParseType(parser, ast, index, true);

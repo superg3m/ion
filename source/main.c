@@ -5,6 +5,8 @@
 
 #include "frontend/ts/type_system.h"
 
+#include "frontend/tc/typechecker.h"
+
 #define CKG_IMPL
 #define CKG_OS_INCLUDE
 #include <ckg.h>
@@ -45,9 +47,9 @@ int main() {
 
 	CKG_Vector(IonNode) ast = ionParseProgram(token_stream);
 
+	ionTypecheckProgram(ast);
 	
 	ionAstPrettyPrint(ast);
-
 
 	ionInterpretProgram(ast);
 

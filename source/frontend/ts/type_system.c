@@ -4,6 +4,10 @@ bool ionTypeIsConcrete(IonType ty) {
     return ty._bits != 0; 
 }
 
+bool ionTypeIsPlaceholder(IonType ty) {
+    return (ty.compat_set == 0) && (ty.builtin_type_id == ION_BTYPE_PLACEHOLDER);
+}
+
 bool ionTypeIsBuiltin(IonType ty) { 
     return ty.compat_set != 0; 
 }
@@ -13,7 +17,7 @@ bool ionTypeIsPoison(IonType ty) {
 }
 
 bool ionTypeIsSignalingPoison(IonType ty) {
-    return ionTypeIsPoison(ty) && ty.builtin_type_id == ION_BTYPE_SIGNALING_POISON;
+    return ionTypeIsPoison(ty) && (ty.builtin_type_id == ION_BTYPE_SIGNALING_POISON);
 }
 
 bool ionTypeWrapperEq(IonTypeWrapper ty1, IonTypeWrapper ty2) {
@@ -66,7 +70,6 @@ IonTypeCompatSet ionTypeToCompatSet(IonType ty) {
 
 IonType ionTypePoison(void) {
     IonType ret = {0};
-    ret.builtin_type_id = ION_BTYPE_POISON;
     ret.compat_set = ION_TYPE_COMPAT_ALL;
     return ret;
 }

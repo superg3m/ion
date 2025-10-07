@@ -1,6 +1,9 @@
 #include "../ast/ast.h"
 #include "type_env.h"
 
+CKG_HashMap(CKG_StringView, IonNode*)* global_function_declarations = NULLPTR;
+
+void ionTypecheckNode(IonNode* node, IonTypeEnv* env);
 
 IonType ionTypecheckerIntersectTypes(IonType ty_act, IonType ty_exp) {
     IonType ty_res = ionTypeIntersectInternal(ty_act, ty_exp);
@@ -12,7 +15,7 @@ IonType ionTypecheckerIntersectTypes(IonType ty_act, IonType ty_exp) {
 }
 
 IonType ionTypecheckExpression(IonNode* expr, IonTypeEnv* env) {
-    ckg_assert_msg(ionNodeIsExpression(expr), "Node is not of type expression");
+    ckg_assert_msg(ionNodeIsExpression(expr), "Node is not of type expression\n");
 
     switch (expr->kind) {
         case ION_NK_INTEGER_EXPR: {
@@ -39,8 +42,8 @@ IonType ionTypecheckExpression(IonNode* expr, IonTypeEnv* env) {
             }
 
             IonNode* decl = ionTypeEnvGet(env, identifier_str);
-            ckg_assert_msg(decl->kind == ION_NK_VAR_DECL);
-            return ionNodeGetVarDeclType(decl)->data.type;
+            ckg_assert_msg(decl->kind == ION_NK_VAR_DECL, "NON-Binary identifier\n");
+            return ionNodeGetDeclType(decl)->data.type;
         }
         
         default: {
@@ -52,7 +55,7 @@ IonType ionTypecheckExpression(IonNode* expr, IonTypeEnv* env) {
 }
 
 void ionTypecheckStatement(IonNode* stmt, IonTypeEnv* env) {
-    ckg_assert_msg(ionNodeIsStatement(stmt), "Node is not of type statement");
+    ckg_assert_msg(ionNodeIsStatement(stmt), "Node is not of type statement\n");
 
     switch (stmt->kind) {
         case ION_NK_ASSIGNMENT_STMT: {
@@ -61,13 +64,21 @@ void ionTypecheckStatement(IonNode* stmt, IonTypeEnv* env) {
             CKG_StringView var_name = stmt->token.lexeme;
             
             IonNode* var_decl = ionTypeEnvGet(env, var_name);
-            IonType lhs_type = ionNodeGetVarDeclType(var_decl)->data.type;
+            IonType lhs_type = ionNodeGetDeclType(var_decl)->data.type;
 
             IonNode* rhs = ionNodeGetRHS(stmt);
             IonType rhs_type = ionTypecheckExpression(rhs, env);
 
-            ionTypecheckerIntersectTypes(var_decl_type, rhs_type);
-            return;
+            ionTypecheckerIntersectTypes(lhs_type, rhs_type);
+        } break;
+
+        case ION_NK_BLOCK_STMT: {
+            for (int i = 0; i < stmt->data.list_count; i++) {
+                ionTypecheckNode(ionNodeGetIndex(stmt, i), env);
+            }
+        } break;
+
+        case ION_NK_PRINT_STMT: {
         } break;
         
         default: {
@@ -84,20 +95,43 @@ void ionTypecheckDeclaration(IonNode* decl, IonTypeEnv* env) {
             // right now we only support `var <name> = <rvalue_expr>`
             // let's consider "de-structuring" and possibly "refutable bindings"
             if (ionTypeEnvHas(env, decl->token.lexeme)) {
-                ckg_assert_msg(false, "Trying to redeclare identifer: %.*\n", decl->token.lexeme.length, decl->token.lexeme.data);
+                ckg_assert_msg(false, "Trying to redeclare identifer: %.*s\n", decl->token.lexeme.length, decl->token.lexeme.data);
             }
 
             ionTypeEnvSet(env, decl->token.lexeme, decl);
 
-            IonNode* ref = ionNodeGetVarDeclType(decl);
+            IonNode* type_node = ionNodeGetDeclType(decl);
             IonNode* rhs = ionNodeGetVarDeclRHS(decl);
             IonType rhs_type = ionTypecheckExpression(rhs, env);
 
-            if (ref->data.type._bits == 0) {
-                ref->data.type = rhs_type;
+            if (ionTypeIsPlaceholder(type_node->data.type)) {
+                type_node->data.type = rhs_type;
             }
 
-            ionTypecheckerIntersectTypes(ref->data.type, rhs_type);
+            // We might want to actually assign poison 
+            // but maybe we want to perfer the decl ??? who knows man
+            // var a: int = "int";
+
+            ionTypecheckerIntersectTypes(type_node->data.type, rhs_type);
+        } break;
+
+        case ION_NK_FUNC_DECL: {
+            if (ckg_hashmap_has(global_function_declarations, decl->token.lexeme)) {
+                ckg_assert_msg(false, "Trying to redeclare identifer: %.*s\n", decl->token.lexeme.length, decl->token.lexeme.data);
+            }
+
+            ckg_hashmap_put(global_function_declarations, decl->token.lexeme, decl);
+            
+            IonTypeEnv func_env = ionTypeEnvCreate(env);
+            IonNode* param_list = ionNodeGetFuncDeclParams(decl);
+            for (int i = 0; i < param_list->data.list_count; i++) {
+                IonNode* param_decl = ionNodeGetIndex(param_list, i);
+                ionTypeEnvSet(&func_env, param_decl->token.lexeme, param_decl);
+            }
+
+            // IonNode* return_type = ionNodeGetFuncDeclReturnType(decl);
+            IonNode* block = ionNodeGetFuncDeclBlock(decl);
+            ionTypecheckStatement(block, &func_env);
         } break;
         
         default: {
@@ -106,7 +140,6 @@ void ionTypecheckDeclaration(IonNode* decl, IonTypeEnv* env) {
     }
 }
 
-
 void ionTypecheckNode(IonNode* node, IonTypeEnv* env) {
     if (ionNodeIsStatement(node)) {
         return ionTypecheckStatement(node, env);
@@ -114,5 +147,14 @@ void ionTypecheckNode(IonNode* node, IonTypeEnv* env) {
         return ionTypecheckDeclaration(node, env);
     } else {
         ckg_assert_msg(false, "Node category: %s not handled!\n", ionNodeKindToString(node->kind));
+    }
+}
+
+void ionTypecheckProgram(CKG_Vector(IonNode) ast) {
+    ckg_hashmap_init_string_view_hash(global_function_declarations, CKG_StringView, IonNode*);
+    IonTypeEnv global_type_env = ionTypeEnvCreate(NULLPTR);
+
+    for (IonNode* decl = ast; decl->kind != ION_NK_END; decl += (1 + decl->desc_count)) {
+        ionTypecheckDeclaration(decl, &global_type_env);
     }
 }

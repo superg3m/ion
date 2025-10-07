@@ -54,13 +54,13 @@ typedef enum IonNodeClass {
 
 #define X_NK_DECLARATIONS  \
     X(ION_NK_VAR_DECL)     \
+    X(ION_NK_PARAM_DECL)     \
     X(ION_NK_FUNC_DECL)    \
 
 typedef enum NodeKind {
     ION_NK_END = 0,
     ION_NK_LIST,
     ION_NK_TYPE_REF,
-    ION_NK_PARAM,
 
     // LEAF NODES
     __LEAF_NODES__ = ION_CLASS_LEAF_NODE|ION_CLASS_EXPRESSION,
@@ -148,10 +148,8 @@ IonNode* ionNodeGetFuncDeclParams(IonNode* node);
 IonNode* ionNodeGetFuncDeclReturnType(IonNode* node);
 IonNode* ionNodeGetFuncDeclBlock(IonNode* node);
 
-IonNode* ionNodeGetVarDeclType(IonNode* node);
 IonNode* ionNodeGetVarDeclRHS(IonNode* node);
 
-IonNode* ionNodeGetParamIdent(IonNode* node);
-IonNode* ionNodeGetParamTypeExpr(IonNode* node);
+IonNode* ionNodeGetDeclType(IonNode* node);
 
 IonNode* ionNodeGetFuncCallArgs(IonNode* node);
