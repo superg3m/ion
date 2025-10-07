@@ -65,17 +65,17 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index, bool exp
 	}
 
     int type_ref_index = index;
-    IonToken ident = ionTokenCreateFake();
+    IonToken token  = ionTokenCreateFake();
     if (expected) {
-        ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
-        ast[index++] = ionNodeCreate(ION_NK_TYPE_REF, ident);
+        token = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
+        ast[index++] = ionNodeCreate(ION_NK_TYPE_REF, token);
     } else {
-        ast[index++] = ionNodeCreate(ION_NK_TYPE_REF, ident);
+        ast[index++] = ionNodeCreate(ION_NK_TYPE_REF, token);
 
         return index;
     }
     
-    IonType type = ionTypeCreate(ident.lexeme);
+    IonType type = ionTypeCreate(token.lexeme);
     for (int i = 0; i < array_wrapper_count; i++) {
        type = ionTypeWrapSlice(type);
     }
