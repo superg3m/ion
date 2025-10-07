@@ -4,11 +4,9 @@
 #define BUFFER_CAPACITY 1024
 
 IonNode ionNodeCreate(IonNodeKind kind, IonToken token) {
-    IonNode ret;
+    IonNode ret = {0};
     ret.kind = kind;
     ret.token = token;
-    ret.desc_count = 0;
-    ckg_memory_zero(&ret.data, sizeof(ret.data));
    
     return ret;
 }
