@@ -4,14 +4,14 @@
 
 typedef u32 IonBuiltinTypeID;
 enum {
-    ION_BTYPE_POISON = 0,
-    ION_BTYPE_void,
+    ION_BTYPE_SIGNALING_POISON = -1,
+    ION_BTYPE_void = 1,
     ION_BTYPE_bool,
     ION_BTYPE_u8,ION_BTYPE_u16,ION_BTYPE_u32,ION_BTYPE_u64,
     ION_BTYPE_i8,ION_BTYPE_i16,ION_BTYPE_i32,ION_BTYPE_i64,
     ION_BTYPE_f32,ION_BTYPE_f64,
     ION_BTYPE_str,
-
+    
     ION_BTYPE_COUNT,
 };
 

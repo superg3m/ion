@@ -12,6 +12,10 @@ bool ionTypeIsPoison(IonType ty) {
     return ty.compat_set == ION_TYPE_COMPAT_ALL; 
 }
 
+bool ionTypeIsSignalingPoison(IonType ty) {
+    return ionTypeIsPoison(ty) && ty.builtin_type_id == ION_BTYPE_SIGNALING_POISON;
+}
+
 bool ionTypeWrapperEq(IonTypeWrapper ty1, IonTypeWrapper ty2) {
     if (ty1.kind != ty2.kind) {
         return false;
@@ -65,6 +69,12 @@ IonType ionTypePoison(void) {
     ret.builtin_type_id = ION_BTYPE_POISON;
     ret.compat_set = ION_TYPE_COMPAT_ALL;
     return ret;
+}
+
+IonType ionTypeSignalingPoison(void) {
+    IonType poison = ionTypePoison();
+    poison.builtin_type_id = ION_BTYPE_SIGNALING_POISON;
+    return poison;
 }
 
 IonType ionTypeVoid(void) {
@@ -126,7 +136,7 @@ IonType ionTypeCreate(CKG_StringView sv) {
     return ionTypePoison();
 }
 
-IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
+IonType ionTypeIntersectInternal(IonType ty_act, IonType ty_exp) {
     // two types are compatible if their intersection is non-empty (non poison)
     // (conversely, they are incompatible if this returns poison)
 
@@ -137,13 +147,13 @@ IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
     // if "type wrappers" mismatch, then return poison (types are not compatible)
     bool wrappers_match = ionTypeWrappersEq(ty_act, ty_exp);
     if (!wrappers_match) {
-        return ionTypePoison();
+        return ionTypeSignalingPoison();
     }
 
     // if compat_set mismatch, then return poison (types are not compatible)
     IonTypeCompatSet intersection_compat_set = ty_act.compat_set & ty_exp.compat_set;
     if (intersection_compat_set == 0) {
-        return ionTypePoison();
+        return ionTypeSignalingPoison();
     }
 
     IonType ty_res = ty_act; // copy wrappers
@@ -163,7 +173,7 @@ IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
     //        downcast is rejected since it may imply truncation (masking low bits)
     if (ty_act_is_concrete && ty_exp_is_concrete) {
         if (ty_act._bits != ty_exp._bits) {
-            return ionTypePoison();
+            return ionTypeSignalingPoison();
         }
         
         ty_res._bits = ty_act._bits;
@@ -175,13 +185,13 @@ IonType ionTypeIntersect(IonType ty_act, IonType ty_exp) {
     if (ty_act_is_concrete) {
         IonTypeCompatSet ty_act_compat_set = ionTypeToCompatSet(ty_act);
         if ((ty_exp.compat_set & ty_act_compat_set) == 0) {
-            return ionTypePoison();
+            return ionTypeSignalingPoison();
         }
         return ty_exp;
     } else {
         IonTypeCompatSet ty_exp_compat_set = ionTypeToCompatSet(ty_exp);
         if ((ty_act.compat_set & ty_exp_compat_set) == 0) {
-            return ionTypePoison();
+            return ionTypeSignalingPoison();
         }
         return ty_act;
     }
