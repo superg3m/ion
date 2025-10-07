@@ -59,9 +59,7 @@ typedef enum IonNodeClass {
 typedef enum NodeKind {
     ION_NK_END = 0,
     ION_NK_LIST,
-    ION_NK_TYPE_EXPR,
-    ION_NK_TYPE_MODIFIER,
-    ION_NK_TYPE_IDENT,
+    ION_NK_TYPE_REF,
     ION_NK_PARAM,
 
     // LEAF NODES
@@ -122,11 +120,12 @@ typedef struct IonNode {
         // support both print & println using single "print" ast node kind
         bool new_line;
 
-        int list_count; // Used for things such as param_list or arg_list or even arrays
+        // Used for things such as param_list or arg_list or even arrays
+        int list_count;
     
-        // IonType type;
+        // Used for type refs
+        IonType type;
     } data;
-
 } IonNode;
 
 void ionAstPrettyPrint(CKG_Vector(IonNode) ast);

@@ -55,27 +55,23 @@ bool ionParserConsumeOnMatch(IonParser* parser, IonTokenKind expected_kind) {
     return false;
 }
 
-int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
-    int start = index;
-    ast[index++] = ionNodeCreate(ION_NK_TYPE_EXPR, ionTokenCreateFake());
-
-    int count = 0;
+IonType ionParseType(IonParser* parser) {
+    int array_wrapper_count = 0;
 	while (ionParserPeekNthToken(parser, 0).kind == ION_TS_LEFT_BRACKET) {
-		IonToken bracket = ionParserExpect(parser, ION_TS_LEFT_BRACKET);
+		ionParserExpect(parser, ION_TS_LEFT_BRACKET);
 		ionParserExpect(parser, ION_TS_RIGHT_BRACKET);
 
-        ast[index++] = ionNodeCreate(ION_NK_TYPE_MODIFIER, bracket);
-        count += 1;
+        array_wrapper_count += 1;
 	}
 
 	IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
-    ast[index++] = ionNodeCreate(ION_NK_TYPE_IDENT, ident);
-    count += 1;
+    IonType type = ionTypeCreate(ident.lexeme);
 
-    ast[start].data.list_count = count;
-    ast[start].desc_count = index - (start + 1);
+    for (int i = 0; i < array_wrapper_count; i++) {
+        type = ionTypeWrapSlice(type);
+    }
 
-	return index;
+	return type;
 }
 
 #define EXPRESSION_FOLDER
@@ -391,9 +387,12 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
         IonToken ident = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
         ast[index++] = ionNodeCreate(ION_NK_VAR_DECL, ident);
 
+        int type_ref_index = index;
+        ast[index++] = ionNodeCreate(ION_NK_TYPE_REF, ionTokenCreateFake());
+
         ionParserExpect(parser, ION_TS_COLON);
         if (ionParserPeekNthToken(parser, 0).kind != ION_TS_EQUALS) {
-            index = ionParseType(parser, ast, index);
+            ast[type_ref_index].data.type = ionParseType(parser);
         }
 
         ionParserExpect(parser, ION_TS_EQUALS);
@@ -412,8 +411,12 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
 
         IonToken token = ionParserExpect(parser, ION_TOKEN_IDENTIFIER);
         ast[index++] = ionNodeCreate(ION_NK_IDENTIFIER_EXPR, token);
+
+        int type_ref_index = index;
+        ast[index++] = ionNodeCreate(ION_NK_TYPE_REF, ionTokenCreateFake());
+
         ionParserExpect(parser, ION_TS_COLON);
-        index = ionParseType(parser, ast, index);
+        ast[type_ref_index].data.type = ionParseType(parser);
 
         if (ionParserPeekNthToken(parser, 0).kind != ION_TS_RIGHT_PAREN) {
             ionParserExpect(parser, ION_TS_COMMA);
@@ -453,7 +456,9 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index) {
         index = ionParseParameterList(parser, ast, index);
         ionParserExpect(parser, ION_TS_RIGHT_ARROW);
 
-        index = ionParseType(parser, ast, index);
+        int type_ref_index = index;
+        ast[index++] = ionNodeCreate(ION_NK_TYPE_REF, ionTokenCreateFake());
+        ast[type_ref_index].data.type = ionParseType(parser);
 
         index = ionParseStatementBlock(parser, ast, index);
         ast[start].desc_count = index - (start + 1);

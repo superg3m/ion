@@ -102,11 +102,9 @@ IonNode* ionNodeGetUnaryOperand(IonNode* node) {
 
 IonNode* ionNodeGetIndex(IonNode* node, int index) {
     ckg_assert(
-        index >= 0 &&
-        (
+        index >= 0 && (
             node->kind == ION_NK_LIST || 
-            node->kind == ION_NK_BLOCK_STMT ||
-            node->kind == ION_NK_TYPE_EXPR
+            node->kind == ION_NK_BLOCK_STMT
         )
     );
 
@@ -164,16 +162,16 @@ IonNode* ionNodeGetVarDeclRHS(IonNode* node) {
     return decl_type + (1 + decl_type->desc_count);
 }
 
-static void ionAppendTypeToBuffer(IonNode* type_expr, char* buffer, u64* length, int cap) {
-    for (int j = 0; j < type_expr->data.list_count; j++) {
-        IonNode* type_component = ionNodeGetIndex(type_expr, j);
-        if (type_component->token.lexeme.data[0] == '[') {
+static void ionAppendTypeToBuffer(IonNode* type_ref, char* buffer, u64* length, int cap) {
+    IonType type = type_ref->data.type;
+    for (int i = 0; i < type.n_wrappers; i++) {
+        if (type.wrappers[i].kind == ION_TYPE_WRAPPER_SLICE) {
             ckg_str_append_char(buffer, length, cap, '[');
             ckg_str_append_char(buffer, length, cap, ']');
-        } else {
-            ckg_str_append(buffer, length, cap, type_component->token.lexeme.data, type_component->token.lexeme.length);
         }
     }
+
+    ckg_str_append(buffer, length, cap, type_ref->token.lexeme.data, type_ref->token.lexeme.length);
 }
 
 static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {

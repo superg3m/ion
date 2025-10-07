@@ -1,61 +1,95 @@
 #pragma once
 
 #include <ckg.h>
-#include "../lexer/token.h"
 
-typedef u64 InfoMask;
+typedef u32 IonBuiltinTypeID;
 enum {
-    ION_TYPE_UNRESOLVED  = (1u << 0),
-    ION_TYPE_VOID        = (1u << 1), // "void"
-    ION_TYPE_INT         = (1u << 2), // "int"
-    ION_TYPE_FLOAT       = (1u << 3), // "float"
-    ION_TYPE_BOOL        = (1u << 4), // "bool"
-    ION_TYPE_STRING      = (1u << 5), // "string"
-    ION_TYPE_ARRAY       = (1u << 6), // "[]"
-    ION_TYPE_FUNC        = (1u << 7), // "fn(...) -> "
-    ION_TYPE_STRUCT      = (1u << 8),
+    ION_BTYPE_POISON = 0,
+    ION_BTYPE_void,
+    ION_BTYPE_bool,
+    ION_BTYPE_u8,ION_BTYPE_u16,ION_BTYPE_u32,ION_BTYPE_u64,
+    ION_BTYPE_i8,ION_BTYPE_i16,ION_BTYPE_i32,ION_BTYPE_i64,
+    ION_BTYPE_f32,ION_BTYPE_f64,
+    ION_BTYPE_str,
 
-    ION_TYPE_COMPARE_EQ  = (1u << 16),
-    ION_TYPE_COMPARE_NEQ = (1u << 17),
-    ION_TYPE_COMPARE_GT  = (1u << 18),
-    ION_TYPE_COMPARE_GTE = (1u << 19),
-    ION_TYPE_COMPARE_LTE = (1u << 20),
-    ION_TYPE_COMPARE_LT  = (1u << 21),
-    ION_TYPE_COMPARE_EQUALITY = ION_TYPE_COMPARE_EQ|ION_TYPE_COMPARE_NEQ,
-    ION_TYPE_FULLY_COMPARABLE = ION_TYPE_COMPARE_EQUALITY|ION_TYPE_COMPARE_GT|ION_TYPE_COMPARE_GTE|ION_TYPE_COMPARE_LTE|ION_TYPE_COMPARE_LT,
-
-    ION_TYPE_OP_ADD      = (1u << 24),
-    ION_TYPE_OP_SUB      = (1u << 25),
-    ION_TYPE_OP_MUL      = (1u << 26),
-    ION_TYPE_OP_DIV      = (1u << 27),
-    ION_TYPE_OP_MOD      = (1u << 28),
-    ION_TYPE_OP_ALL = ION_TYPE_OP_ADD|ION_TYPE_OP_SUB|ION_TYPE_OP_MUL|ION_TYPE_OP_DIV|ION_TYPE_OP_MOD,
-
-    ION_TYPE_INFO_INDEXABLE = (1u << 29),
+    ION_BTYPE_COUNT,
 };
 
-// Im not sure if this can represent types like
-// func() -> func(int) -> array -> array -> int
+typedef u8 IonTypeCompatSet;
+#define ION_TYPE_COMPAT_BIT_INDEX(compat_suffix) __builtin_ctz(ION_TYPE_COMPAT_ ## compat_suffix)
+enum {
+    ION_TYPE_COMPAT_VOID  = 0x01, // to be fair, for both `void` and `bool` the only possible members of the
+    ION_TYPE_COMPAT_BOOL  = 0x02, // compatibility set is `void` and `bool` respectively, so these are redundant
+    ION_TYPE_COMPAT_UINT  = 0x04,
+    ION_TYPE_COMPAT_SINT  = 0x08,
+    ION_TYPE_COMPAT_FLOAT = 0x10,
+    ION_TYPE_COMPAT_STR   = 0x20,
+};
+#define ION_TYPE_COMPAT_NONE 0x0  // used by UserDef Types (compat only with same concrete, not compatible as a set!)
+#define ION_TYPE_COMPAT_ALL 0xFF  // used by Poison Type
 
-/*
-fn test() -> (fn(int) -> [][]int) {
-    return fn(x: int) -> [][]int {
-        return [][].int[[1, 2, 3], [4, 5]]
-    }
-}
-*/
 
-typedef struct Type {
-    InfoMask mask;
-    u8 array_depth;  // 0 for non-array types
+typedef u8 IonTypeWrapperKind8;
+enum {
+    ION_TYPE_WRAPPER_NONE = 0,
+    ION_TYPE_WRAPPER_POINTER,
+    ION_TYPE_WRAPPER_SLICE,
+    ION_TYPE_WRAPPER_ARRAY,
+};
 
-    // struct Type* next;
-} Type;
+typedef struct IonTypeWrapper {
+    IonTypeWrapperKind8 kind;
+    union {
+        u32 arr_item_count; // array wrapper has associated item count
+    };
+} IonTypeWrapper;
 
-Type ionGetReturnType(Type t);
-Type ionTypeCreate(CKG_StringView sv);
-Type ionTypePromote(IonToken op, Type a, Type b);
-bool TypeCompare(Type c1, Type c2);
+// IonType will be used by type-checker during type-inference
+// meaning not all IonType will be resolved / known: they may exist as "compatibility sets" til inference finishes.
+typedef struct IonNode IonNode;
+typedef struct IonType {
+    // for non concrete types (e.g. during inference), we always have at least the compat set
+    // (we fallback to poison in some cases for error recovery)
+    IonTypeCompatSet compat_set;
 
-Type ionTypeAddArrayDepth(Type t);
-Type ionTypeRemoveArrayDepth(Type t);
+    union {
+        // builtin types are represented with a special ID
+        IonBuiltinTypeID builtin_type_id;
+        // user-def types: ptr to definition site (which has schema / proc prototype)
+        IonNode* type_def;
+        IonNode* func_def;
+    
+        size_t _bits;
+    };
+    
+    // wrappers (pointer|slice|array) "applying to" the base type (or the compat set)
+    u32            n_wrappers;  // non-zero means at least one wrapper present
+    IonTypeWrapper wrappers[4]; // support up to 4 wrapper levels
+} IonType;
+
+
+// Function declarations
+bool ionTypeIsConcrete(IonType ty);
+bool ionTypeIsBuiltin(IonType ty);
+bool ionTypeIsPoison(IonType ty);
+bool ionTypeWrapperEq(IonTypeWrapper ty1, IonTypeWrapper ty2);
+bool ionTypeWrappersEq(IonType ty1, IonType ty2);
+
+IonTypeCompatSet ionTypeToCompatSet(IonType ty);
+
+IonType ionTypePoison(void);
+IonType ionTypeVoid(void);
+IonType ionTypeInt32(void);
+IonType ionTypeFloat32(void);
+IonType ionTypeBool(void);
+IonType ionTypeStr(void);
+IonType ionTypeCreate(CKG_StringView sv);
+
+#define ionTypeWrapPointer(ty) ionTypeWrap(ty, ION_TYPE_WRAPPER_POINTER, 0)
+#define ionTypeWrapSlice(ty) ionTypeWrap(ty, ION_TYPE_WRAPPER_SLICE, 0)
+#define ionTypeWrapArray(ty, arr_item_count) ionTypeWrap(ty, ION_TYPE_WRAPPER_ARRAY, arr_item_count)
+IonType ionTypeWrap(IonType ty, IonTypeWrapperKind8 wrapper_kind, u32 arr_item_count);
+
+IonType ionTypeIntersect(IonType ty1, IonType ty2);
+
+void ionTypePrint(IonType ty);

@@ -2,7 +2,7 @@
 #define CKG_OS_INCLUDE
 #include <ckg.h>
 
-#include "frontend/ts/new_type_system.h"
+#include "frontend/ts/type_system.h"
 
 #define TOTAL_STACK_MEMORY_SIZE KiloBytes(800)
 #define TOTAL_HEAP_MEMORY_SIZE MegaBytes(35)
