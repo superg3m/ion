@@ -64,6 +64,8 @@ const char* ionNodeKindToString(IonNodeKind kind) {
         #undef X
     }
 
+    ckg_assert(ckg_hashmap_has(kind_map, kind));
+
     return ckg_hashmap_get(kind_map, kind);
 }
 
