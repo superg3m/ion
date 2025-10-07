@@ -35,16 +35,17 @@ void ionTypecheckStatement(IonNode* stmt, IonTypeEnv* env) {
 
     switch (stmt->kind) {
         case ION_NK_ASSIGNMENT_STMT: {
-            // IonNode* var_decl = ionTypeEnvGet(env, stmt->token.lexeme);
+            IonNode* var_decl = ionTypeEnvGet(env, stmt->token.lexeme);
+            IonType var_decl_type = ionNodeGetVarDeclType(var_decl)->data.type;
 
-            // IonNode* rhs = ionNodeGetRHS(stmt);
-            // IonType rhs_type = ion
+            IonNode* rhs = ionNodeGetRHS(stmt);
+            IonType rhs_type = ionTypecheckExpression(rhs, env);
 
-            // if (ionTypeIntersect() == false) {
-                // error
-            // }
+            if (ionTypeIntersect(var_decl_type, rhs_type).builtin_type_id == ION_BTYPE_POISON) {
+                ckg_assert_msg(false, "Var Decl Type mismatch\n");
+            }
 
-            // return var_decl_type
+            return var_decl_type;
         } break;
         
         default: {
@@ -76,8 +77,6 @@ void ionTypecheckDeclaration(IonNode* decl, IonTypeEnv* env) {
             if (ionTypeIntersect(ref->data.type, rhs_type).builtin_type_id == ION_BTYPE_POISON) {
                 ckg_assert_msg(false, "Var Decl Type mismatch\n");
             }
-
-            // return var_decl_type
         } break;
         
         default: {
