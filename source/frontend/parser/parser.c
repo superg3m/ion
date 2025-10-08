@@ -3,6 +3,49 @@
 
 #include <string.h>
 
+/**
+@Author: Jovanni Djonaj
+@Date: Oct 8th, 2025
+@Description: {
+    This module is responsible for consuming tokens and building the Abstract Syntax Tree (AST). 
+    It utilizes a highly efficient Flat AST design where the entire tree is stored in a single contiguous array.
+}
+-----------------------------------------------------------------------------
+CORE AST STRUCTURE (THE FLAT AST):
+-----------------------------------------------------------------------------
+1. Flat Storage and Indexing: {
+    The AST is stored in a single array (`CKG_Vector(IonNode) ast`). The `index` variable 
+    tracks the next available position for a new node, and parsing functions return the 
+    updated index after writing the node and all its descendants.
+}
+
+2. Parent-Child Relation (desc_count): {
+    The tree structure is defined implicitly. A parent node at `ast[i]` uses its 
+    `desc_count` field to indicate the total number of child and descendant nodes 
+    immediately following it in the array (from `ast[i+1]` onwards).
+}
+
+-----------------------------------------------------------------------------
+HOW TO EXTEND THE PARSER (ADD NEW LANGUAGE FEATURES):
+-----------------------------------------------------------------------------
+1. Define the Node Kind
+
+2. Implement the Parser Function: {
+    Write a new `ionParse<FeatureName>()` function. This function MUST: {
+        - Create the parent node and place it at the starting index (`start`).
+        - Recursively call sub-parsers to write descendants, updating `index`.
+        - Calculate and set the `desc_count` on the parent node before returning: 
+        `ast[start].desc_count = new_index - (start + 1)`.
+    }
+}
+
+3. Hook into Grammar Flow: {
+    Call the new parser function from the appropriate grammar level entry point, 
+    such as `ionParseStatement` (for new control flow) or `ionParseDeclaration` 
+    (for new top-level items).
+}
+*/
+
 typedef struct IonParser {
     CKG_Vector(IonToken) tokens;
     int current;
