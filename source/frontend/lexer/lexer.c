@@ -1,5 +1,30 @@
 #include "lexer.h"
 
+/**
+@Author: Jovanni Djonaj
+@Date: Oct 8th, 2025
+@Description: {
+    Token Management and Lexer Extensibility This Lexer module is highly extensible,
+    with most token types being data-driven via the `#define X(...)` definitions in 'token.h'.
+}
+-----------------------------------------------------------------------------
+HOW TO ADD NEW TOKENS:
+-----------------------------------------------------------------------------
+1. X_KEYWORD_TOKENS and X_LITERAL_TOKENS (Easy): {
+    To add new keyword or literal token simply add an entry to the respective macro in 'token.h'. 
+    The rest of the lexer/parser handles these tokens automatically. No code changes required.
+}
+
+2. Syntax Tokens (The Exception): {
+    - Single-Character Syntax (e.g., '+', '{'): The system handles these automatically.
+
+    - Multi-Character Syntax (e.g., "->", "==", "+="): You MUST add the entry 
+    to `X_SYNTAX_TOKENS` and manually implement the logic to consume this token 
+    within the `ionLexerConsumeSyntax()` function. This is the only part of token 
+    addition that requires code outside of 'token.h'.
+}
+*/
+
 typedef struct Lexer {
     u64 left_pos;
     u64 right_pos;
