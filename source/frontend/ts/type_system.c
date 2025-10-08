@@ -2,13 +2,21 @@
 #include "../ast/ast.h"
 
 // These are the responsibilies of the type system:
-// - IonType ionTypeIntersect(left, right)
-// - IonType ionBinaryPromoteType(op, left, right)
+// TypeIon ionTypeCreate(...)
+// ionCreateWrapper(wrapper_type, ...)
+// - IonType ionTypeIntersect(IonType left_type, IonType right_type)
+// - IonType ionBinaryPromoteType(op, IonType left_type, IonType right_type)
     // - Handles +, -, ==, !=, >, ect ...
-// - bool ionUnaryTypeCheck(op, operand)
+// - bool ionUnaryTypeCheck(IonTokenKind op, IonType operand_type)
     // - Handles !, *, -, +, ect ...
-// - bool ionCanCast(cast, operand)
-// - char* ionTypeToString()
+// - bool ionCanCast(IonNode* cast_expr, IonTokenKind operand_type)
+// - char* ionTypeToString(IonType t)
+
+// u64 ionTypeComputeSize(IonType t, TypeEnv* env)
+//  - This does of course means you need a way to
+//   store context I think maybe the type env stuff should live here and then 
+//   typechecker makes the type envs and you are required to pass in a type env
+
 
 bool ionTypeIsConcrete(IonType ty) { 
     return ty._bits != 0; 
