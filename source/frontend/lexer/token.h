@@ -7,6 +7,7 @@
     X(ION_TS_STAR, "*")              \
     X(ION_TS_DIVISION, "/")          \
     X(ION_TS_MODULUS, "%")           \
+    X(ION_TS_NOT, "!")               \
     X(ION_TS_LEFT_CURLY, "{")        \
     X(ION_TS_RIGHT_CURLY, "}")       \
     X(ION_TS_LEFT_PAREN, "(")        \

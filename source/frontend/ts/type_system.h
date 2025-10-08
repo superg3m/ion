@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ckg.h>
+#include "../lexer/token.h"
 
 typedef u32 IonBuiltinTypeID;
 enum {
@@ -96,3 +96,6 @@ IonType ionTypeWrap(IonType ty, IonTypeWrapperKind8 wrapper_kind, u32 arr_item_c
 IonType ionTypeIntersectInternal(IonType ty1, IonType ty2);
 
 void ionTypePrint(IonType ty);
+
+IonType ionTypeUnaryCheck(IonTokenKind op, IonType operand);
+IonType ionTypeBinaryPromote(IonTokenKind op, IonType left, IonType right);

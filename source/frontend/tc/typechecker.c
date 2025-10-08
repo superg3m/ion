@@ -44,7 +44,22 @@ IonType ionTypecheckExpression(IonNode* expr, IonTypeEnv* env) {
             IonNode* decl = ionTypeEnvGet(env, identifier_str);
             ckg_assert_msg(decl->kind == ION_NK_VAR_DECL, "NON-Binary identifier\n");
             return ionNodeGetDeclType(decl)->data.type;
-        }
+        } break;
+
+
+        case ION_NK_UNARY_EXPR: {
+            IonType t = ionTypecheckExpression(ionNodeGetUnaryOperand(expr), env);
+            if (ionTypeIsPoison(ionTypeUnaryCheck(expr->token.kind, t))) {
+                // @TODO: complain about undeclared identifier
+                return ionTypePoison();
+            }
+
+            ckg_assert_msg(false, "TODO\n");
+        } break;
+
+        case ION_NK_BINARY_EXPR: {
+            ckg_assert_msg(false, "TODO\n");
+        } break;
         
         default: {
             ckg_assert_msg(false, "Expression kind: %s not handled!\n", ionNodeKindToString(expr->kind));
