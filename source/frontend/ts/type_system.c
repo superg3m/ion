@@ -1,6 +1,15 @@
 #include "type_system.h"
 #include "../ast/ast.h"
 
+// These are the responsibilies of the type system:
+// - IonType ionTypeIntersect(left, right)
+// - IonType ionBinaryPromoteType(op, left, right)
+    // - Handles +, -, ==, !=, >, ect ...
+// - bool ionUnaryTypeCheck(op, operand)
+    // - Handles !, *, -, +, ect ...
+// - bool ionCanCast(cast, operand)
+// - char* ionTypeToString()
+
 bool ionTypeIsConcrete(IonType ty) { 
     return ty._bits != 0; 
 }
