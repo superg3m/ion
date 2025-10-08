@@ -5,7 +5,7 @@ fn do_something(a: int, b: []string) -> void {
 }
 
 fn main() -> void {
-    var y := 4 + 3.5;
+    var y := 3 + 4.3;
     println(y);
 
     // do_something(1000);

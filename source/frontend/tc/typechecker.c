@@ -8,6 +8,10 @@ void ionTypecheckNode(IonNode* node, IonTypeEnv* env);
 IonType ionTypecheckerIntersectTypes(IonType ty_act, IonType ty_exp) {
     IonType ty_res = ionTypeIntersectInternal(ty_act, ty_exp);
     if (ionTypeIsSignalingPoison(ty_res)) {
+        // for not just assert
+
+        ckg_assert(false);
+
         /* @TODO diagnostic for type mismatch */
         ty_res = ionTypePoison();
     }

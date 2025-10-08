@@ -337,6 +337,7 @@ void ionPrintExpression(IonNode* expr, Scope* scope) {
         case ION_NK_STRING_EXPR: {
             // fixNewLineCode()
             // CKG_LOG_PRINT("%.*s", expr->data.s);
+            ckg_assert(false);
         } break;
 
         default: {
