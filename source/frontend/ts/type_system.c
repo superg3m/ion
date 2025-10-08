@@ -126,15 +126,15 @@ IonType ionTypeWrap(IonType ty, IonTypeWrapperKind8 wrapper_kind, u32 arr_item_c
 }
 
 IonType ionTypeCreate(CKG_StringView sv) {
-    if (ckg_str_equal(sv.data, sv.length, "void", sizeof("void") - 1)) {
+    if (ckg_str_equal(sv.data, sv.length, CKG_LIT_ARG("void"))) {
         return ionTypeVoid();
-    } else if (ckg_str_equal(sv.data, sv.length, "int", sizeof("int") - 1)) {
+    } else if (ckg_str_equal(sv.data, sv.length, CKG_LIT_ARG("int"))) {
         return ionTypeInt32();
-    } else if (ckg_str_equal(sv.data, sv.length, "float", sizeof("float") - 1)) {
+    } else if (ckg_str_equal(sv.data, sv.length, CKG_LIT_ARG("float"))) {
         return ionTypeFloat32();
-    } else if (ckg_str_equal(sv.data, sv.length, "bool", sizeof("bool") - 1)) {
+    } else if (ckg_str_equal(sv.data, sv.length, CKG_LIT_ARG("bool"))) {
         return ionTypeBool();
-    } else if (ckg_str_equal(sv.data, sv.length, "string", sizeof("string") - 1)) {
+    } else if (ckg_str_equal(sv.data, sv.length, CKG_LIT_ARG("string"))) {
         return ionTypeStr();
     }
     return ionTypePoison();

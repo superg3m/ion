@@ -301,11 +301,11 @@ static JSON* ionAstToJsonHelper(IonNode* node, CJ_Arena* arena) {
                 for (int i = 0; i < params->data.list_count; i++) {
                     IonNode* param_decl = ionNodeGetIndex(params, i);
                     ckg_str_append(buffer, &length, 1024, param_decl->token.lexeme.data, param_decl->token.lexeme.length);
-                    ckg_str_append(buffer, &length, 1024, ": ", sizeof(": ") - 1);
+                    ckg_str_append(buffer, &length, 1024, CKG_LIT_ARG(": "));
                     ionAppendTypeToBuffer(ionNodeGetDeclType(param_decl), buffer, &length, BUFFER_CAPACITY);
 
                     if (i < params->data.list_count - 1) {
-                        ckg_str_append(buffer, &length, 1024, ", ", sizeof(", ") - 1);
+                        ckg_str_append(buffer, &length, 1024, CKG_LIT_ARG(", "));
                     }
                 }
                 ckg_str_append_char(buffer, &length, 1024, ')');

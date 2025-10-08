@@ -136,7 +136,7 @@ int ionParseType(IonParser* parser, CKG_Vector(IonNode) ast, int index, bool exp
             return index;
         } else if (ionParserConsumeOnMatch(parser, ION_TL_BOOLEAN)) {
             IonNode node = ionNodeCreate(ION_NK_BOOLEAN_EXPR, current);
-            node.data.b = ckg_str_equal(current.lexeme.data, current.lexeme.length,  "true", sizeof("true") - 1);
+            node.data.b = ckg_str_equal(current.lexeme.data, current.lexeme.length,  CKG_LIT_ARG("true"));
             ast[index++] = node;
 
             return index;

@@ -53,8 +53,8 @@ IonTokenKind ionTokenGetKeyword(CKG_StringView sv) {
             X_KEYWORD_TOKENS
         #undef X
 
-        ckg_hashmap_put(keyword_map, ckg_sv_create("true", sizeof("true") - 1), ION_TL_BOOLEAN);
-        ckg_hashmap_put(keyword_map, ckg_sv_create("false", sizeof("false") - 1), ION_TL_BOOLEAN);
+        ckg_hashmap_put(keyword_map, ckg_sv_create(CKG_LIT_ARG("true")), ION_TL_BOOLEAN);
+        ckg_hashmap_put(keyword_map, ckg_sv_create(CKG_LIT_ARG("false")), ION_TL_BOOLEAN);
     }
 
     if (!ckg_hashmap_has(keyword_map, sv)) {

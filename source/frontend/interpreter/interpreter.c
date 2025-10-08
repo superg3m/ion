@@ -450,8 +450,8 @@ void ionInterpretProgram(CKG_Vector(IonNode) ast) {
         program += (1 + program->desc_count);
     }
 
-    if (ckg_hashmap_has(global_function, ckg_sv_create("main", sizeof("main") - 1))) {
-        IonNode* mainDecl = ckg_hashmap_get(global_function, ckg_sv_create("main", sizeof("main") - 1));
+    if (ckg_hashmap_has(global_function, ckg_sv_create(CKG_LIT_ARG("main")))) {
+        IonNode* mainDecl = ckg_hashmap_get(global_function, ckg_sv_create(CKG_LIT_ARG("main")));
         IonNode* mainCall = ckg_alloc(sizeof(IonNode) * 2);
         mainCall[0] = ionNodeCreate(ION_NK_FUNC_CALL_SE, mainDecl->token);
         mainCall[1] = ionNodeCreate(ION_NK_LIST, ionTokenCreateFake());
