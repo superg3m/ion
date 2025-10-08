@@ -330,13 +330,17 @@ void ionPrintExpression(IonNode* expr, Scope* scope) {
             CKG_LOG_PRINT("%s", expr->data.b ? "true" : "else");
         } break;
 
+        case ION_NK_IDENTIFIER_EXPR: {
+            ionPrintExpression(ionInterpretExpression(expr, scope), scope);
+        } break;
+
         case ION_NK_STRING_EXPR: {
             // fixNewLineCode()
             // CKG_LOG_PRINT("%.*s", expr->data.s);
         } break;
 
         default: {
-            ckg_assert(false);
+            ckg_assert_msg(false, "Expression kind: %s not handled!\n", ionNodeKindToString(expr->kind));
         } break;
     }
 }
@@ -407,7 +411,7 @@ IonNode* ionInterpretStatement(IonNode* stmt, Scope* scope) {
 IonNode* ionInterpretDeclaration(IonNode* decl, Scope* scope) {
     switch (decl->kind) {
         case ION_NK_VAR_DECL: {
-            IonNode* RHS = ionNodeGetVarDeclRHS(decl);
+            IonNode* RHS = ionInterpretExpression(ionNodeGetVarDeclRHS(decl), scope);
             ionScopeSet(scope, decl->token.lexeme, RHS);
         } break;
 

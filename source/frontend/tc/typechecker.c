@@ -48,17 +48,30 @@ IonType ionTypecheckExpression(IonNode* expr, IonTypeEnv* env) {
 
 
         case ION_NK_UNARY_EXPR: {
-            IonType t = ionTypecheckExpression(ionNodeGetUnaryOperand(expr), env);
-            if (ionTypeIsPoison(ionTypeUnaryCheck(expr->token.kind, t))) {
+            IonType operand_type = ionTypecheckExpression(ionNodeGetUnaryOperand(expr), env);
+
+            IonType unary_type = ionTypeUnaryCheck(expr->token.kind, operand_type);
+            if (ionTypeIsPoison(unary_type)) {
                 // @TODO: complain about undeclared identifier
+                ckg_assert(false);
                 return ionTypePoison();
             }
 
-            ckg_assert_msg(false, "TODO\n");
+            return unary_type;
         } break;
 
         case ION_NK_BINARY_EXPR: {
-            ckg_assert_msg(false, "TODO\n");
+            IonType left_type = ionTypecheckExpression(ionNodeGetLHS(expr), env);
+            IonType right_type = ionTypecheckExpression(ionNodeGetRHS(expr), env);
+
+            IonType promoted_type = ionTypeBinaryPromote(expr->token.kind, left_type, right_type);
+            if (ionTypeIsPoison(promoted_type)) {
+                // @TODO: complain about undeclared identifier
+                ckg_assert(false);
+                return ionTypePoison();
+            }
+
+            return promoted_type;
         } break;
         
         default: {

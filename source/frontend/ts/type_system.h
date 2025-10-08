@@ -2,8 +2,7 @@
 
 #include "../lexer/token.h"
 
-typedef u32 IonBuiltinTypeID;
-enum {
+typedef enum IonBuiltinTypeID {
     ION_BTYPE_SIGNALING_POISON = (u32)-1,
     ION_BTYPE_PLACEHOLDER = 0,
     ION_BTYPE_void = 1,
@@ -14,18 +13,17 @@ enum {
     ION_BTYPE_str,
     
     ION_BTYPE_COUNT,
-};
+} IonBuiltinTypeID;
 
-typedef u8 IonTypeCompatSet;
 #define ION_TYPE_COMPAT_BIT_INDEX(compat_suffix) __builtin_ctz(ION_TYPE_COMPAT_ ## compat_suffix)
-enum {
+typedef enum IonTypeCompatSet {
     ION_TYPE_COMPAT_VOID  = 0x01, // to be fair, for both `void` and `bool` the only possible members of the
     ION_TYPE_COMPAT_BOOL  = 0x02, // compatibility set is `void` and `bool` respectively, so these are redundant
     ION_TYPE_COMPAT_UINT  = 0x04,
     ION_TYPE_COMPAT_SINT  = 0x08,
     ION_TYPE_COMPAT_FLOAT = 0x10,
     ION_TYPE_COMPAT_STR   = 0x20,
-};
+} IonTypeCompatSet;
 #define ION_TYPE_COMPAT_NONE 0x0  // used by UserDef Types (compat only with same concrete, not compatible as a set!)
 #define ION_TYPE_COMPAT_ALL 0xFF  // used by Poison Type
 
