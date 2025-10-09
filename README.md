@@ -163,3 +163,82 @@ for (int i = 0; i < table.symbols.meta.capacity; i++) {
 
     - [?] ByteCode
     - [?] LLVM
+
+
+Author Notes:
+- How do we handle:
+    1. Bultins
+    2. Runtime Time Info (I really like the TypeAny void* and a type kind in jai)
+    3. Syscalls/Foreign Calls
+    4. Core/Runtime
+    5. Imports
+    6. Variatic Arguments
+    7. Maybe some type concept or type union? (number -> float|int|uint)
+    8. spread operator on slices and array
+    9. Regression testing (it needs to be easy to add ion source as a test and have that be tested)
+    10. Zero initalization! But also all types need to be able to initalize to zero so string needs to be null or "" ect
+    11. We need enums!
+    12. We need to be able to genuinely cast to pointer types.
+    13. get away from the interpreter transpile to C so pointer types are free (then we can research how to actual do them)
+    14. function pointer calls
+    15. typedef
+    16. memory compatible (This i have no actual idea how to do other than just look at the type defs?)
+
+
+How should for loops actually work?
+- Should they only iterate over ranges?
+- Should there be like two different for loops? one for ranges and one normal one?
+
+// inclusive go this from jai
+for (i : 0..15) {}
+
+
+1. Bultins:
+```
+    // These could be function prototypes in the 
+    // actual language however, At the end of the day you must call a compiler builtin 
+    // that doens't really have the typechecking. So this is just a wrapper:
+    fn len(Iterable iter) -> number;
+    fn print(arg []number) -> number;
+    fn println(arg []number) -> number;
+
+    fn type_info(...) -> TypeInfo
+    fn sizeof(...) -> int
+
+```
+
+
+2. Variatic Arguments / Spread Operator:
+```
+    fn sum(nums ..number) -> number {
+        accumulator: number;
+
+        for (num : nums) {
+            // maybe implicit index if you want?
+            accumulator += num;
+        }
+
+        return accumulator;
+    }
+
+    // Runtime type
+    fn do_anything(args ...any) -> void {
+        for (arg : args) {
+            switch (arg.type) {
+                case int: {
+
+                } break;
+
+                case string: {
+
+                } break;
+
+                case float: {
+
+                } break;
+            }
+        }
+    }
+```
+
+// Really I need to learn more about the data segment, object files, linking/relocations
