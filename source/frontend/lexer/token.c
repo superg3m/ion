@@ -22,15 +22,15 @@ const char* ionTokenKindGetString(IonTokenKind kind) {
         stringify(ION_TOKEN_ILLEGAL_TOKEN),
         stringify(ION_TOKEN_EOF),
         
-        #define X(name, str) stringify(name),
+        #define X(token, str) stringify(token),
             X_SYNTAX_TOKENS
         #undef X   
 
-        #define X(name) stringify(name),
+        #define X(token) stringify(token),
             X_LITERAL_TOKENS
         #undef X
 
-        #define X(name, str) stringify(name),
+        #define X(token, str) stringify(token),
             X_KEYWORD_TOKENS
         #undef X
 
@@ -46,7 +46,6 @@ void ionTokenPrint(IonToken token) {
 
 IonTokenKind ionTokenGetKeyword(CKG_StringView sv) {
     static CKG_HashMap(CKG_StringView, IonTokenKind)* keyword_map = NULLPTR;
-
     if (keyword_map == NULLPTR) {
         ckg_hashmap_init_string_view_hash(keyword_map, CKG_StringView, IonTokenKind);
         #define X(token, str) ckg_hashmap_put(keyword_map, ckg_sv_create(str, sizeof(str) - 1), token);
@@ -65,11 +64,13 @@ IonTokenKind ionTokenGetKeyword(CKG_StringView sv) {
 }
 
 IonTokenKind ionTokenGetSyntax(CKG_StringView sv) {
-    CKG_HashMap(CKG_StringView, IonTokenKind)* keyword_map = NULL;
-    ckg_hashmap_init_string_view_hash(keyword_map, CKG_StringView, IonTokenKind);
-    #define X(token, str) ckg_hashmap_put(keyword_map, ckg_sv_create(str, sizeof(str) - 1), token);
-        X_SYNTAX_TOKENS
-    #undef X
+    static CKG_HashMap(CKG_StringView, IonTokenKind)* keyword_map = NULLPTR;
+    if (keyword_map == NULLPTR) {
+        ckg_hashmap_init_string_view_hash(keyword_map, CKG_StringView, IonTokenKind);
+        #define X(token, str) ckg_hashmap_put(keyword_map, ckg_sv_create(str, sizeof(str) - 1), token);
+            X_SYNTAX_TOKENS
+        #undef X
+    }
 
     if (!ckg_hashmap_has(keyword_map, sv)) {
         CKG_LOG_ERROR("WHAT: %.*s\n", sv.length, sv.data);

@@ -63,15 +63,15 @@ typedef enum IonTokenKind {
     ION_TOKEN_ILLEGAL_TOKEN,
     ION_TOKEN_EOF,
     
-    #define X(name, str) name,
+    #define X(token, str) token,
         X_SYNTAX_TOKENS
     #undef X
 
-    #define X(name) name,
+    #define X(token) token,
         X_LITERAL_TOKENS
     #undef X
 
-    #define X(name, str) name,
+    #define X(token, str) token,
         X_KEYWORD_TOKENS
     #undef X
 

@@ -29,7 +29,6 @@ bool ionNodeIsDeclaration(IonNode* node) {
 
 const char* ionNodeKindToString(IonNodeKind kind) {
     static CKG_HashMap(IonNodeKind, const char*)* kind_map = NULLPTR;
-
     if (kind_map == NULLPTR) {
         ckg_hashmap_init_siphash(kind_map, IonNodeKind, const char*);
 

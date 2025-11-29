@@ -319,7 +319,7 @@ typedef struct IonBinaryTypeQuery {
 
 IonType ionTypeBinaryPromote(IonTokenKind op, IonType left, IonType right) {
     static CKG_HashMap(IonBinaryTypeQuery, IonType)* map = NULLPTR;
-    if (!map) {
+    if (map == NULLPTR) {
         ckg_hashmap_init_siphash(map, IonBinaryTypeQuery, IonType);
         IonTokenKind math_op_array[] = {ION_TS_PLUS, ION_TS_MINUS, ION_TS_STAR, ION_TS_DIVISION};
         for (int i = 0; i < ArrayCount(math_op_array); i++) {
